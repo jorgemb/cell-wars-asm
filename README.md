@@ -21,3 +21,18 @@ Install and run DOSBox. Mount your working directory with something like this:
 mount x C:\path\to\your\directory
 ```
 
+Extract the contents of tasm.zip and add the binary folder to the path:
+```dos
+set path=%path%;x:\tasm\bin\
+```
+
+Compile, link and run with the following lines:
+```dos
+tasm.exe /l /zi main.asm
+tlink.exe /v main.obj
+main.exe
+```
+
+And finally, run main.exe.
+
+Instructions are currently in spanish, however I'll be translating to english in the future.

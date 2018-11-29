@@ -1,0 +1,12 @@
+syntax: glob
+*.lst
+*.exe
+*.map
+*.obj
+*.LST
+*.EXE
+*.MAP
+*.OBJ
+
+DocumentoEscrito/
+Thumbs.db

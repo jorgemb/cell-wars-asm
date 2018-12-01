@@ -1,17 +1,17 @@
 ;###########################################;
 ;Universidad del Valle de Guatemala			;
-;Organización de Computadoras y Assembler	;
+;Organizaciï¿½n de Computadoras y Assembler	;
 ;											;
 ; Este lugar maneja los graficos del		;
 ; juego.									;
 ;											;
-;Eddy Omar Castro Jáuregui - 11032			;
-;Jorge Luis Martínez Bonilla - 11237		;
+;Eddy Omar Castro Jï¿½uregui - 11032			;
+;Jorge Luis Martï¿½nez Bonilla - 11237		;
 ;###########################################;
 
 .DATA
 
-; DATOS PARA LAS IMAGENES (de fagos)-------------------------- ;
+; DATOS PARA LAS IMAGENES (de PHAGES)-------------------------- ;
 ; La estructura para las imagenes es de la siguiente manera
 ;	- byte	Ancho	(en pixeles)
 ;	- byte	Alto	(en pixeles)
@@ -276,9 +276,9 @@ CAMBIAR_MODO_GRAFICO_NO_PINTAR PROC NEAR
 CAMBIAR_MODO_GRAFICO_NO_PINTAR ENDP
 
 ; --------------------------------------------- ;
-; Limpia el buffer del tamaño dado con el color
+; Limpia el buffer del tamaï¿½o dado con el color
 ; asignado. El segmento extra se queda asignado
-; con la dirección del buffer.
+; con la direcciï¿½n del buffer.
 ; --------------------------------------------- ;
 LIMPIAR_BUFFER MACRO DIR_BUFFER, TAMANO, COLOR
 	; Establece el valor del segmento extra
@@ -299,7 +299,7 @@ ENDM
 
 ; ------------------------------------------------- ;
 ; Copia los elementos de un buffer a otro del 
-; mismo tamaño.
+; mismo tamaï¿½o.
 ; ------------------------------------------------- ;
 BLIT_BUFFER MACRO SEG_BUFFER_SRC, SEG_BUFFER_DEST, TAMANO
 	; Establece y guarda los segmentos de datos
@@ -344,9 +344,9 @@ ENDM
 
 ;-------------------------------------------------------------------------;
 ; Procedimiento que permite realizar la impresion de imagenes en pantalla
-; @param [WORD]: Dirección de la imagen
-; @param [WORD]: Posición en X
-; @param [WORD]: Posición en y
+; @param [WORD]: Direcciï¿½n de la imagen
+; @param [WORD]: Posiciï¿½n en X
+; @param [WORD]: Posiciï¿½n en y
 ; @param [WORD]: Dato de jugador
 ;-------------------------------------------------------------------------;
 DIBUJAR_FAGO PROC NEAR
@@ -464,8 +464,8 @@ AJUSTE_POSICION ENDP
 ;-------------------------------------------------------------------------;
 ; Procedimiento que permite realizar la impresion de la cantidad de virus
 ; @param [WORD]: Cantidad de virus
-; @param [WORD]: Posición en X
-; @param [WORD]: Posición en y
+; @param [WORD]: Posiciï¿½n en X
+; @param [WORD]: Posiciï¿½n en y
 ;-------------------------------------------------------------------------;
 IMPRIMIR_CANTIDAD_VIRUS PROC NEAR
 
@@ -510,8 +510,8 @@ IMPRIMIR_CANTIDAD_VIRUS ENDP
 ;-------------------------------------------------------------------------;
 ; Procedimiento que permite realizar la impresion de la cantidad de virus
 ; @param [WORD]: Numero
-; @param [WORD]: Posición en X
-; @param [WORD]: Posición en y
+; @param [WORD]: Posiciï¿½n en X
+; @param [WORD]: Posiciï¿½n en y
 ;-------------------------------------------------------------------------;
 IMPRIMIR_DECENAS PROC NEAR
 	; Preparar la pila
@@ -545,8 +545,8 @@ IMPRIMIR_DECENAS ENDP
 ;-------------------------------------------------------------------------;
 ; Procedimiento que permite realizar la impresion de la cantidad de virus
 ; @param [WORD]: Numero
-; @param [WORD]: Posición en X
-; @param [WORD]: Posición en y
+; @param [WORD]: Posiciï¿½n en X
+; @param [WORD]: Posiciï¿½n en y
 ;-------------------------------------------------------------------------;
 IMPRIMIR_UNIDADES PROC NEAR
 	; Preparar la pila
@@ -580,8 +580,8 @@ IMPRIMIR_UNIDADES ENDP
 ;-----------------------------------------------------------------;
 ; Procedimiento que permite realizar la impresion de la cantidad de virus
 ; @param [WORD]: OFFSET de numero
-; @param [WORD]: Posición en X
-; @param [WORD]: Posición en y
+; @param [WORD]: Posiciï¿½n en X
+; @param [WORD]: Posiciï¿½n en y
 ;-----------------------------------------------------------------;
 DIBUJAR_NUMERO	PROC NEAR
 

@@ -1,22 +1,22 @@
 ;###########################################;
 ;Universidad del Valle de Guatemala			;
-;Organización de Computadoras y Assembler	;
+;Organizaciï¿½n de Computadoras y Assembler	;
 ;											;
-; Contiene toda la lógica para simular los	;
-; fagos en pantalla, además de la definición;
+; Contiene toda la lï¿½gica para simular los	;
+; PHAGES en pantalla, ademï¿½s de la definiciï¿½n;
 ; del nivel principal.						;
 ;											;
-;Eddy Omar Castro Jáuregui - 11032			;
-;Jorge Luis Martínez Bonilla - 11237		;
+;Eddy Omar Castro Jï¿½uregui - 11032			;
+;Jorge Luis Martï¿½nez Bonilla - 11237		;
 ;###########################################;
 
 .DATA
-	; Definición de los fagos en el nivel
-	; La estructura de los fagos es de la siguiente manera
+	; Definiciï¿½n de los PHAGES en el nivel
+	; La estructura de los PHAGES es de la siguiente manera
 	;	- byte	PosX
 	;	- byte	PosY
 	;	- byte	Radio
-	;	- byte	Jugador Dueño (FF = Neutro, 00 ó 01 = Jugador1, 02 ó 03 = Jugador2)
+	;	- byte	Jugador Dueï¿½o (FF = Neutro, 00 ï¿½ 01 = Jugador1, 02 ï¿½ 03 = Jugador2)
 	;	- word	Imagen
 	;	- word	Cantidad de Virus
 	; TOTAL: 8 bytes por fago
@@ -28,7 +28,7 @@
 	;			DW	0000		; Virus iniciales
 	
 	; Inicializa todos en default
-	; FAGOS_INICIAL		DQ		CANTIDAD_FAGOS DUP ( 00000000FF000000H )
+	; FAGOS_INICIAL		DQ		PHAGE_QUANTITY DUP ( 00000000FF000000H )
 	
 	FAGOS_INICIAL	DW	290, 170	; POSX,POSY
 					DB	25, 02		; Radio, Jugador
@@ -91,16 +91,16 @@
 
 .CODE
 ; --------------------------------------------------- ;
-; Inicializa los fagos con sus datos predeterminados.
+; Inicializa los PHAGES con sus datos predeterminados.
 ; --------------------------------------------------- ;
 FAGOS_INICIALIZAR PROC NEAR
 	PUSHA
 	
-	; Copia los datos iniciales al vector de fagos
+	; Copia los datos iniciales al vector de PHAGES
 	MOV		SI, OFFSET FAGOS_INICIAL
-	MOV		DI, OFFSET FAGOS
+	MOV		DI, OFFSET PHAGES
 	
-	MOV		CX, FAGOS_TOTAL_BYTES
+	MOV		CX, PHAGE_TOTAL_BYTES
 	FAGOS_INICIALIZAR_CICLO:
 		MOV	AL, BYTE PTR [SI]
 		MOV BYTE PTR [DI], AL
@@ -112,18 +112,18 @@ FAGOS_INICIALIZAR PROC NEAR
 	RET
 FAGOS_INICIALIZAR ENDP
 
-; Devuelve la dirección de un fago dado su ID, el ID
+; Devuelve la direcciï¿½n de un fago dado su ID, el ID
 ; deve de estar en un registro o en memoria (y no puede ser AX)
-; Devuelve la dirección en BX.
+; Devuelve la direcciï¿½n en BX.
 FAGO_DIRECCION MACRO ID_FAGO
 	; Guarda los registros
 	PUSH	AX
 	PUSH	DX
 
-	MOV		AX, TAMANO_FAGO
+	MOV		AX, PHAGE_SIZE
 	MUL		BYTE PTR ID_FAGO
 	
-	LEA		BX, FAGOS
+	LEA		BX, PHAGES
 	ADD		BX, AX
 	
 	; Reestablece los registros
@@ -131,11 +131,11 @@ FAGO_DIRECCION MACRO ID_FAGO
 	POP		AX
 ENDM
 
-; Obtiene la dirección de un virus al fago dado. El vector es guardado
-; en las posición de memoria FP1 y FP2.
-; @param [WORD]: Dirección en memoria del virus
-; @param [WORD]: Dirección en memoria del fago
-; @param [WORD]: Booleano, 1 si se quiere la dirección normalizada,
+; Obtiene la direcciï¿½n de un virus al fago dado. El vector es guardado
+; en las posiciï¿½n de memoria FP1 y FP2.
+; @param [WORD]: Direcciï¿½n en memoria del virus
+; @param [WORD]: Direcciï¿½n en memoria del fago
+; @param [WORD]: Booleano, 1 si se quiere la direcciï¿½n normalizada,
 ; 0 si se quiere con magnitud
 ; [Pierde los valores de FP1 y FP2]
 VIRUS_VECTOR_FAGO PROC NEAR
@@ -144,26 +144,26 @@ VIRUS_VECTOR_FAGO PROC NEAR
 	MOV		BP, SP
 	PUSHA
 	
-	; Guarda la posición del fago en memoria y lo convierte a punto flotante
-	MOV		BX, [BP+6]		; Dirección en memoria del fago
+	; Guarda la posiciï¿½n del fago en memoria y lo convierte a punto flotante
+	MOV		BX, [BP+6]		; Direcciï¿½n en memoria del fago
 	
-	MOV		AX, WORD PTR FAGO_X[BX]		; ..X
+	MOV		AX, WORD PTR PHAGE_X[BX]		; ..X
 	MOV		WORD PTR FP1, AX
 	FILD	WORD PTR FP1
 	FSTP	DWORD PTR FP1
 	
-	MOV		AX, WORD PTR FAGO_Y[BX]		; ..Y
+	MOV		AX, WORD PTR PHAGE_Y[BX]		; ..Y
 	MOV		WORD PTR FP2, AX
 	FILD	WORD PTR FP2
 	FSTP	DWORD PTR FP2
 	
-	; Obtener la dirección del virus al fago
-	MOV		SI, [BP+4]		; Dirección en memoria del virus
+	; Obtener la direcciï¿½n del virus al fago
+	MOV		SI, [BP+4]		; Direcciï¿½n en memoria del virus
 	
-	; Prueba (empuja la dirección del virus a la pila)
+	; Prueba (empuja la direcciï¿½n del virus a la pila)
 	; FLD		DWORD PTR VIRUS_X[SI]
 	; FLD		DWORD PTR VIRUS_Y[SI]
-	ADD		SI, VIRUS_X		; SI apunta ahora a la Posición X
+	ADD		SI, VIRUS_X		; SI apunta ahora a la Posiciï¿½n X
 	
 	PUSH	OFFSET FP1					; Destino
 	PUSH	SI							; Sustraendo
@@ -188,13 +188,13 @@ VIRUS_VECTOR_FAGO PROC NEAR
 VIRUS_VECTOR_FAGO ENDP
 
 ; ------------------------------------------------------------------------- ;
-; Verifica si hubo una colisión con algún fago. Si el virus
+; Verifica si hubo una colisiï¿½n con algï¿½n fago. Si el virus
 ; colisiona con otro virus regresa en AH = 01. Si colisiona con
 ; el virus destion entonces AL = FF, si colisiona con otro entonces
 ; en AL se guarda el ID del fago.
 ; El virus no reporta colisiones cuando esta se realiza con su fago fuente.
-; @param [WORD]: Dirección del virus a verificar
-; @return [AX]: Valores de colisión (ver descripción).
+; @param [WORD]: Direcciï¿½n del virus a verificar
+; @return [AX]: Valores de colisiï¿½n (ver descripciï¿½n).
 ; ------------------------------------------------------------------------- ;
 VIRUS_COLISION_FAGO PROC NEAR
 	; Preparar pila
@@ -211,22 +211,22 @@ VIRUS_COLISION_FAGO PROC NEAR
 	MOV		SI, BX
 	
 	; Revisa colisiones con cada fago
-	MOV		CX, CANTIDAD_FAGOS
+	MOV		CX, PHAGE_QUANTITY
 	VIRUS_COLISION_FAGO_CICLO:
 		; Revisa que el fago no sea el fago fuente
 		MOV		DX, CX
 		DEC		DX
 		
-		CMP		DL, VIRUS_FUENTE[SI]
+		CMP		DL, VIRUS_SOURCE[SI]
 		JE		VIRUS_COLISION_FAGO_FINCICLO
 
-		; Obtiene la dirección del virus al fago y la distancia entre ellos
+		; Obtiene la direcciï¿½n del virus al fago y la distancia entre ellos
 		MOV		SI, [BP+4]
-		FAGO_DIRECCION DX	; La dirección del fago está en BX
+		FAGO_DIRECCION DX	; La direcciï¿½n del fago estï¿½ en BX
 		
 		PUSH	00			; Vector sin normalizar
-		PUSH	BX			; Dirección del fago
-		PUSH	SI			; Dirección del virus
+		PUSH	BX			; Direcciï¿½n del fago
+		PUSH	SI			; Direcciï¿½n del virus
 		CALL 	VIRUS_VECTOR_FAGO
 		ADD		SP, 6
 		
@@ -235,7 +235,7 @@ VIRUS_COLISION_FAGO PROC NEAR
 		ADD		SP, 2
 		
 		; Compara el radio con la magnitud del vector
-		MOVSX	AX, BYTE PTR FAGO_RADIO[BX]
+		MOVSX	AX, BYTE PTR PHAGE_RADIUS[BX]
 		MOV		WORD PTR FP1, AX
 		FICOMP	WORD PTR FP1			; CMP Distancia con Radio
 		; FILD	WORD PTR FP1
@@ -245,14 +245,14 @@ VIRUS_COLISION_FAGO PROC NEAR
 		SAHF
 		JAE		VIRUS_COLISION_FAGO_FINCICLO
 		
-		; .. hay colisión
+		; .. hay colisiï¿½n
 		MOV		AH, 1
 		
-		; .. revisa si la colisión es con el destino
-		CMP		DL, VIRUS_FAGO[SI]
+		; .. revisa si la colisiï¿½n es con el destino
+		CMP		DL, VIRUS_PHAGE[SI]
 		JE		COLISION_DESTINO
 		
-		MOV		AL, VIRUS_FAGO[SI]
+		MOV		AL, VIRUS_PHAGE[SI]
 		JMP		VIRUS_COLISION_FAGO_FIN
 	
 		COLISION_DESTINO:
@@ -278,13 +278,13 @@ VIRUS_COLISION_FAGO PROC NEAR
 VIRUS_COLISION_FAGO ENDP
 
 ; ------------------------------------------------------------------------- ;
-; Verifica si hubo una colisión con algún fago. Si el virus
+; Verifica si hubo una colisiï¿½n con algï¿½n fago. Si el virus
 ; colisiona con otro virus regresa en AH = 01. Si colisiona con
 ; el virus destion entonces AL = FF, si colisiona con otro entonces
 ; en AL se guarda el ID del fago.
 ; El virus no reporta colisiones cuando esta se realiza con su fago fuente.
-; @param [WORD]: Dirección del virus a verificar
-; @return [AX]: Valores de colisión (ver descripción).
+; @param [WORD]: Direcciï¿½n del virus a verificar
+; @return [AX]: Valores de colisiï¿½n (ver descripciï¿½n).
 ; ------------------------------------------------------------------------- ;
 VIRUS_COLISION_FAGO_MOUSE PROC NEAR
 	; Preparar pila
@@ -301,22 +301,22 @@ VIRUS_COLISION_FAGO_MOUSE PROC NEAR
 	MOV		SI, BX
 	
 	; Revisa colisiones con cada fago
-	MOV		CX, CANTIDAD_FAGOS
+	MOV		CX, PHAGE_QUANTITY
 	VIRUS_COLISION_FAGO_CICLO_M:
 		; Revisa que el fago no sea el fago fuente
 		MOV		DX, CX
 		DEC		DX
 		
-		CMP		DL, VIRUS_FUENTE[SI]
+		CMP		DL, VIRUS_SOURCE[SI]
 		JE		VIRUS_COLISION_FAGO_FINCICLO_M
 
-		; Obtiene la dirección del virus al fago y la distancia entre ellos
+		; Obtiene la direcciï¿½n del virus al fago y la distancia entre ellos
 		MOV		SI, [BP+4]
-		FAGO_DIRECCION DX	; La dirección del fago está en BX
+		FAGO_DIRECCION DX	; La direcciï¿½n del fago estï¿½ en BX
 		
 		PUSH	00			; Vector sin normalizar
-		PUSH	BX			; Dirección del fago
-		PUSH	SI			; Dirección del virus
+		PUSH	BX			; Direcciï¿½n del fago
+		PUSH	SI			; Direcciï¿½n del virus
 		CALL 	VIRUS_VECTOR_FAGO
 		ADD		SP, 6
 		
@@ -325,7 +325,7 @@ VIRUS_COLISION_FAGO_MOUSE PROC NEAR
 		ADD		SP, 2
 		
 		; Compara el radio con la magnitud del vector
-		MOVSX	AX, BYTE PTR FAGO_RADIO[BX]
+		MOVSX	AX, BYTE PTR PHAGE_RADIUS[BX]
 		MOV		WORD PTR FP1, AX
 		FICOMP	WORD PTR FP1			; CMP Distancia con Radio
 		; FILD	WORD PTR FP1
@@ -335,11 +335,11 @@ VIRUS_COLISION_FAGO_MOUSE PROC NEAR
 		SAHF
 		JAE		VIRUS_COLISION_FAGO_FINCICLO_M
 		
-		; .. hay colisión
+		; .. hay colisiï¿½n
 		MOV		AH, 1
 		
-		; .. revisa si la colisión es con el destino
-		CMP		DL, VIRUS_FAGO[SI]
+		; .. revisa si la colisiï¿½n es con el destino
+		CMP		DL, VIRUS_PHAGE[SI]
 		JE		COLISION_DESTINO_M
 		
 		MOV		AL, DL
@@ -381,20 +381,20 @@ FAGOS_MOVILIZAR_VIRUS PROC NEAR
 	MOV		BP, SP
 	PUSHA
 
-	; Obtiene la dirección del fago 
+	; Obtiene la direcciï¿½n del fago 
 	MOV		DX, [BP+4]		; ID del fago fuente
-	FAGO_DIRECCION DX		; Dirección en BX
+	FAGO_DIRECCION DX		; Direcciï¿½n en BX
 	MOV		SI, BX
 	
-	; Obtiene la mitad de los fagos del fuente y los activa
-	MOV		AX, FAGO_NVIRUS[SI]
-	;.. compara que tenga una cantidad mínima de virus
+	; Obtiene la mitad de los PHAGES del fuente y los activa
+	MOV		AX, PHAGE_NVIRUS[SI]
+	;.. compara que tenga una cantidad mï¿½nima de virus
 	CMP		AX, MINIMO_VIRUS
 	JL		FAGOS_MOVILIZAR_VIRUS_FIN
 	
 	SHR		AX, 1
 	
-	SUB		WORD PTR FAGO_NVIRUS[SI], AX
+	SUB		WORD PTR PHAGE_NVIRUS[SI], AX
 	
 	PUSH	WORD PTR [BP+4]			; ID Fago fuente
 	PUSH	WORD PTR [BP+6]			; ID Fago destino
@@ -410,8 +410,8 @@ FAGOS_MOVILIZAR_VIRUS PROC NEAR
 	RET
 FAGOS_MOVILIZAR_VIRUS ENDP
 
-; Actualiza los fagos al aumentarles la cantidad de
-; virus que tienen. Los virus aumentan a una razón
+; Actualiza los PHAGES al aumentarles la cantidad de
+; virus que tienen. Los virus aumentan a una razï¿½n
 ; de 1/5 radio por segundo.
 FAGOS_ACTUALIZAR PROC NEAR
 .DATA
@@ -421,30 +421,30 @@ FAGOS_ACTUALIZAR PROC NEAR
 	PUSHA
 	
 	; Itera por cada fago
-	MOV		CX, CANTIDAD_FAGOS
+	MOV		CX, PHAGE_QUANTITY
 	FAGOS_ACTUALIZAR_CICLO:
 		MOV		DX, CX
 		DEC		DX			; ID del fago actual
-		FAGO_DIRECCION DX	; La dirección del fago se guarda en BX
+		FAGO_DIRECCION DX	; La direcciï¿½n del fago se guarda en BX
 		
 		; Revisa que el fago pertenezca a un jugador
-		CMP		BYTE PTR FAGO_JUGADOR[BX], 0FFH
+		CMP		BYTE PTR PHAGE_PLAYER[BX], 0FFH
 		JE		FAGOS_CICLO_FIN
 		
 		; Aumenta la cantidad de virus en el fago
-		MOVZX	AX, BYTE PTR FAGO_RADIO[BX]
+		MOVZX	AX, BYTE PTR PHAGE_RADIUS[BX]
 		MOV		DX, 0
 		DIV		WORD PTR FAGOS_AUMENTO
 		
-		ADD		FAGO_NVIRUS[BX], AX
+		ADD		PHAGE_NVIRUS[BX], AX
 		
 		; .. comparar que la cantidad de virus no sea mayor
 		; a dos veces el radio del fago
-		MOVSX	AX, BYTE PTR FAGO_RADIO[BX]
+		MOVSX	AX, BYTE PTR PHAGE_RADIUS[BX]
 		SHL		AX, 1
-		CMP		AX, WORD PTR FAGO_NVIRUS[BX]
+		CMP		AX, WORD PTR PHAGE_NVIRUS[BX]
 		JG		FAGOS_CICLO_FIN
-		MOV		WORD PTR FAGO_NVIRUS[BX], AX
+		MOV		WORD PTR PHAGE_NVIRUS[BX], AX
 		
 		FAGOS_CICLO_FIN:
 		LOOP	FAGOS_ACTUALIZAR_CICLO
@@ -458,7 +458,7 @@ FAGOS_ACTUALIZAR ENDP
 ; Devuelve el ID del fago seleccionado por un jugador
 ; @param [WORD]: ID del jugador (0 = Jugador 1, 1 = Jugador 2)
 ; @return [AX]: ID del fago seleccionado 
-; 		( FF0 si ningún fago está seleccionado)
+; 		( FF0 si ningï¿½n fago estï¿½ seleccionado)
 ; ------------------------------------------------------------ ;
 FAGO_OBTENER_SELECCIONADO PROC NEAR
 	; Preparar pila
@@ -471,24 +471,24 @@ FAGO_OBTENER_SELECCIONADO PROC NEAR
 	MOV		AX, [BP+4]		; ID del jugador
 	SHL		AX, 1			; Corrige el ID (0 = J1 y 2 = J2)
 	
-	; Itera por cada uno de los fagos
-	MOV		CX, CANTIDAD_FAGOS
+	; Itera por cada uno de los PHAGES
+	MOV		CX, PHAGE_QUANTITY
 	FAGO_OBTENER_S_CICLO:
 		MOV		DX, CX
-		DEC		DX			; Corrección de posición
+		DEC		DX			; Correcciï¿½n de posiciï¿½n
 		
-		; Obtener la dirección del fago
-		FAGO_DIRECCION DX	; Dirección en BX
+		; Obtener la direcciï¿½n del fago
+		FAGO_DIRECCION DX	; Direcciï¿½n en BX
 		
 		; Verificar si el fago pertenece al jugador
-		MOVZX		DX, BYTE PTR FAGO_JUGADOR[BX]
+		MOVZX		DX, BYTE PTR PHAGE_PLAYER[BX]
 		SHR			DX, 1
 		SHL			DX, 1
 		CMP			DX, AX
 		JNE			FAGO_OBTENER_S_CICLO_FIN
 		
-		; Verificar si el fago está seleccionado
-		CMP			DL, BYTE PTR FAGO_JUGADOR[BX]
+		; Verificar si el fago estï¿½ seleccionado
+		CMP			DL, BYTE PTR PHAGE_PLAYER[BX]
 		JE			FAGO_OBTENER_S_CICLO_FIN
 		; .. si no son iguales, significa que estaba seleccionado
 		MOV			AX, CX
@@ -498,7 +498,7 @@ FAGO_OBTENER_SELECCIONADO PROC NEAR
 		FAGO_OBTENER_S_CICLO_FIN:
 		LOOP FAGO_OBTENER_S_CICLO
 	
-	MOV		AX, 0FFH			; Ningún fago encontrado
+	MOV		AX, 0FFH			; Ningï¿½n fago encontrado
 	JMP		FAGO_OBTENER_S_FIN
 	
 	FAGO_OBTENER_S_FIN:
@@ -512,7 +512,7 @@ FAGO_OBTENER_SELECCIONADO ENDP
 
 ; --------------------------------------------------------------- ;
 ; Trata de seleccionar un fago para un jugador, siempre y cuando
-; el jugador sea dueño del fago. Deselecciona cualquier otro fago
+; el jugador sea dueï¿½o del fago. Deselecciona cualquier otro fago
 ; del jugador.
 ; @param [WORD]: ID del jugador (J1 = 0, J2 = 1)
 ; @param [WORD]: ID del fago a seleccionar
@@ -523,7 +523,7 @@ FAGO_SELECCIONAR PROC NEAR
 	MOV		BP, SP
 	PUSHA
 	
-	; Deselecciona todos los fagos del jugador
+	; Deselecciona todos los PHAGES del jugador
 	PUSH	WORD PTR [BP+4] 		; ID del jugador
 	CALL	FAGO_DESELECCIONAR
 	ADD		SP, 2
@@ -535,12 +535,12 @@ FAGO_SELECCIONAR PROC NEAR
 	MOV		DX, [BP+6]		; ID del fago
 	FAGO_DIRECCION DX		; Direccion en BX
 	
-	CMP		AL, BYTE PTR FAGO_JUGADOR[BX]
+	CMP		AL, BYTE PTR PHAGE_PLAYER[BX]
 	JNE		FAGO_SELECCIONAR_FIN
 	
 	; .. selecciona el fago objetivo
 	INC		AL
-	MOV		BYTE PTR FAGO_JUGADOR[BX], AL
+	MOV		BYTE PTR PHAGE_PLAYER[BX], AL
 	
 	FAGO_SELECCIONAR_FIN:
 	; Restaura la pila
@@ -550,7 +550,7 @@ FAGO_SELECCIONAR PROC NEAR
 FAGO_SELECCIONAR ENDP
 
 ; ------------------------------------------------------------ ;
-; Deselecciona cualquier fago seleccionado por algún jugador.
+; Deselecciona cualquier fago seleccionado por algï¿½n jugador.
 ; @param [WORD]: ID del jugador (J1 = 0, J2 = 1)
 ; ------------------------------------------------------------ ;
 FAGO_DESELECCIONAR PROC NEAR
@@ -562,23 +562,23 @@ FAGO_DESELECCIONAR PROC NEAR
 	MOV		AX, [BP+4]		; ID del jugador
 	SHL		AX, 1			; Corrige el ID del jugador (J1 = 0, J2 = 2)
 	
-	; Itera por cada uno de los fagos
-	MOV		CX, CANTIDAD_FAGOS
+	; Itera por cada uno de los PHAGES
+	MOV		CX, PHAGE_QUANTITY
 	FAGO_DESELECCIONAR_CICLO:
 		MOV		DX, CX
-		DEC		DX			; Corrección de posición
+		DEC		DX			; Correcciï¿½n de posiciï¿½n
 		
-		; Obtiene la dirección del fago y el jugador del mismo
+		; Obtiene la direcciï¿½n del fago y el jugador del mismo
 		FAGO_DIRECCION DX	; Direccion en BX
 		
-		MOVZX	DX, BYTE PTR FAGO_JUGADOR[BX]
+		MOVZX	DX, BYTE PTR PHAGE_PLAYER[BX]
 		SHR		DX, 1
 		SHL		DX, 1	; Elimina el bit de seleccion
 		CMP		AX, DX
 		JNE		FAGO_DESELECCIONAR_CICLO_FIN
 		
 		; Deselecciona el fago
-		MOV		BYTE PTR FAGO_JUGADOR[BX], AL
+		MOV		BYTE PTR PHAGE_PLAYER[BX], AL
 		
 		FAGO_DESELECCIONAR_CICLO_FIN:
 		LOOP FAGO_DESELECCIONAR_CICLO

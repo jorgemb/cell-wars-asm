@@ -1,18 +1,18 @@
 ;###########################################;
 ;Universidad del Valle de Guatemala			;
-;Organización de computadoras y Assembler	;
+;Organizaciï¿½n de computadoras y Assembler	;
 ;											;
-; Librería que contiene las funciones para  ;
-; la impresión del menú del juego.			;
+; Librerï¿½a que contiene las funciones para  ;
+; la impresiï¿½n del menï¿½ del juego.			;
 ;											;
-;Eddy Omar Castro Jáuregui - 11032			;
-;Jorge Luis Martínez Bonilla - 11237		;
+;Eddy Omar Castro Jï¿½uregui - 11032			;
+;Jorge Luis Martï¿½nez Bonilla - 11237		;
 ;###########################################;
 
 ; -----------------------------------------------;
 ; Este procedimiento imprime el menu de opciones.
 ; -----------------------------------------------;
-IMPRESION_MENU PROC NEAR
+PRINT_MENU PROC NEAR
 	CALL	CLEAR_SCREEN
 	PUSH 	7
 	PUSH	27
@@ -24,10 +24,10 @@ IMPRESION_MENU PROC NEAR
 	ADD		SP, 2
 	; Imprimir las opciones del menu
 	MOV		CX, 05D
-	MOV		BX, OFFSET OPCIONES
+	MOV		BX, OFFSET MENU_OPTIONS
 	MOV		AX, 9			; Contador de lineas (empieza en la linea 9)
-	IMPRESION_MENU_CICLO:
-		; Mete los registros a la pila para ser recuperados después
+	PRINT_MENU_CYCLE:
+		; Mete los registros a la pila para ser recuperados despuï¿½s
 		PUSH	AX
 		PUSH	BX
 		PUSH	CX
@@ -47,13 +47,13 @@ IMPRESION_MENU PROC NEAR
 		
 		INC		AX
 		ADD		BX, 2
-		LOOP	IMPRESION_MENU_CICLO
+		LOOP	PRINT_MENU_CYCLE
 	RET
-IMPRESION_MENU ENDP
+PRINT_MENU ENDP
 
 ; ---------------------------------------------------------;
 ; Este procedimiento permite al usuario seleccionar opcion.
-; @return [AL]: Valor de la opción seleccionada.
+; @return [AL]: Valor de la opciï¿½n seleccionada.
 ; ---------------------------------------------------------;
 SELECCION_MENU PROC NEAR
 	PUSH 	15
@@ -73,14 +73,14 @@ SELECCION_MENU PROC NEAR
 	SUB		AL, 30H		; Convertir a decimal
 	MOV		SELECCION_MEN, AX
 	
-	; Verificar que la opción seleccionada sea válida
+	; Verificar que la opciï¿½n seleccionada sea vï¿½lida
 	PUSH	1
 	PUSH	5
 	PUSH	AX
-	CALL	VERIFICA_CANTIDAD
+	CALL	VERIFY_VALUE
 	ADD		SP, 6
 	
-	; Repetir en caso que no sea válida
+	; Repetir en caso que no sea vï¿½lida
 	CMP		AH, 0
 	JE		CAPTURA_OPCION
 	
@@ -88,11 +88,11 @@ SELECCION_MENU PROC NEAR
 SELECCION_MENU ENDP
 
 ; ------------------------------------------------- ;
-; Determina la acción que el usuario desea realizar.
-; @param [BYTE]: Opción de menu seleccionada.
+; Determina la acciï¿½n que el usuario desea realizar.
+; @param [BYTE]: Opciï¿½n de menu seleccionada.
 ; ------------------------------------------------- ;
 DETERMINAR_SELECCION PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
@@ -106,10 +106,10 @@ DETERMINAR_SELECCION PROC NEAR
 	JMP		[BX]
 	
 	OPCION_1:
-	CALL 	JUGAR
+	CALL 	PLAY_GAME
 	JMP		SELECCION_VERIF
 	OPCION_2:
-	CALL	INSTRUCCIONES
+	CALL	INSTRUCTIONS
 	JMP		SELECCION_VERIF
 	OPCION_3:
 	CALL	CAMBIO_PASOS
@@ -121,14 +121,14 @@ DETERMINAR_SELECCION PROC NEAR
 	CALL	SALIDA
 	
 	SELECCION_VERIF:
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		BX
 	POP		BP
 	RET
 DETERMINAR_SELECCION ENDP
 
 ; -----------------------------------------------------------------------------------------;
-; Procedimiento que se realiza cuando el usuario selecciona la opción de cambiar jugadores.
+; Procedimiento que se realiza cuando el usuario selecciona la opciï¿½n de cambiar jugadores.
 ; -----------------------------------------------------------------------------------------;
 CAMBIO_JUGADORES PROC NEAR
 	CALL	CLEAR_SCREEN
@@ -149,14 +149,14 @@ CAMBIO_JUGADORES PROC NEAR
 	SUB		AL, 30H		; Convertir a decimal
 	MOV		NO_JUGAD, AX
 	
-	; Verificar que la opción seleccionada sea válida
+	; Verificar que la opciï¿½n seleccionada sea vï¿½lida
 	PUSH	2
 	PUSH	3
 	PUSH	AX
-	CALL	VERIFICA_CANTIDAD
+	CALL	VERIFY_VALUE
 	ADD		SP, 6
 	
-	; Repetir en caso que no sea válida
+	; Repetir en caso que no sea vï¿½lida
 	CMP		AH, 0
 	JE		CAPTURA_JUGADOR
 	CALL	EXITO_JUGAD		; Caso valido
@@ -164,7 +164,7 @@ CAMBIO_JUGADORES PROC NEAR
 CAMBIO_JUGADORES ENDP
 
 ; -------------------------------------------------------------------------------------;
-; Procedimiento que se realiza cuando el usuario selecciona la opción de cambiar pasos.
+; Procedimiento que se realiza cuando el usuario selecciona la opciï¿½n de cambiar pasos.
 ; -------------------------------------------------------------------------------------;
 EXITO_JUGAD PROC NEAR
 	PUSH 	15
@@ -183,7 +183,7 @@ EXITO_JUGAD PROC NEAR
 EXITO_JUGAD ENDP
 	
 ; -------------------------------------------------------------------------------------;
-; Procedimiento que se realiza cuando el usuario selecciona la opción de cambiar pasos.
+; Procedimiento que se realiza cuando el usuario selecciona la opciï¿½n de cambiar pasos.
 ; -------------------------------------------------------------------------------------;
 CAMBIO_PASOS PROC NEAR
 	CALL	CLEAR_SCREEN
@@ -197,37 +197,37 @@ CAMBIO_PASOS PROC NEAR
 	PUSH	OFFSET TEMP_PASOS
 	CALL	CIN
 	
-	; Convetir a número
+	; Convetir a nï¿½mero
 	PUSH 	OFFSET	TEMP_PASOS
 	CALL	STR_TO_NUMBER
-	ADD		SP, 12				; Limpiar la pila de las últimas llamadas
+	ADD		SP, 12				; Limpiar la pila de las ï¿½ltimas llamadas
 	
 	; Verificar error
 	CMP		AX, 0
 	JE		NO_NUM
 	MOV		TEMP_PASOS_NUM, AX
 	
-	; Verificar que las pasos ingresados sean válidos
+	; Verificar que las pasos ingresados sean vï¿½lidos
 	PUSH	15
 	PUSH	70
 	PUSH	AX
-	CALL	VERIFICA_CANTIDAD
+	CALL	VERIFY_VALUE
 	ADD		SP, 6
 	
 	CMP		AH, 0
 	JE		NO_NUM
 	JMP		SI_NUM
-	NO_NUM:						; Accion en caso de ser número válido
+	NO_NUM:						; Accion en caso de ser nï¿½mero vï¿½lido
 	CALL	ERROR_PASOS
 	JMP		TERMINA
-	SI_NUM:						; Accion en caso de no ser número válido
+	SI_NUM:						; Accion en caso de no ser nï¿½mero vï¿½lido
 	CALL	GUARDA_PASOS
 	TERMINA:
 	RET
 CAMBIO_PASOS ENDP
 
 ; ----------------------------------------------------------------------------------------------------------;
-; Procedimiento que muestra un mensaje de error en caso de que no sea correcto el número de pasos ingresado.
+; Procedimiento que muestra un mensaje de error en caso de que no sea correcto el nï¿½mero de pasos ingresado.
 ; ----------------------------------------------------------------------------------------------------------;
 ERROR_PASOS PROC NEAR
 	
@@ -248,11 +248,11 @@ ERROR_PASOS PROC NEAR
 ERROR_PASOS	ENDP
 
 ; -------------------------------------------------------------------;
-; Procedimiento que almacena el número de pasos en el lugar correcto.
+; Procedimiento que almacena el nï¿½mero de pasos en el lugar correcto.
 ; -------------------------------------------------------------------;
 GUARDA_PASOS PROC NEAR
 	
-	; Almacenar el número de pasos ingresados
+	; Almacenar el nï¿½mero de pasos ingresados
 	MOV		AX, TEMP_PASOS_NUM
 	MOV		NO_PASOS, AX
 	
@@ -275,7 +275,7 @@ GUARDA_PASOS ENDP
 ; -----------------------------------------------;
 ; Este procedimiento imprime el menu de opciones.
 ; -----------------------------------------------;
-INSTRUCCIONES PROC NEAR
+INSTRUCTIONS PROC NEAR
 	CALL	CLEAR_SCREEN
 	PUSH 	5
 	PUSH	32
@@ -290,7 +290,7 @@ INSTRUCCIONES PROC NEAR
 	MOV		BX, OFFSET INSTRUCCION
 	MOV		AX, 7			; Contador de lineas (empieza en la linea 7)
 	INSTRUCCIONES_CICLO:
-		; Mete los registros a la pila para ser recuperados después
+		; Mete los registros a la pila para ser recuperados despuï¿½s
 		PUSH	AX
 		PUSH	BX
 		PUSH	CX
@@ -315,5 +315,5 @@ INSTRUCCIONES PROC NEAR
 	XOR AH,AH
 	INT 16H	
 	RET
-INSTRUCCIONES ENDP
+INSTRUCTIONS ENDP
 

@@ -1,22 +1,22 @@
 ;###########################################;
 ;Universidad del Valle de Guatemala			;
-;Organización de computadoras y Assembler	;
+;Organizaciï¿½n de computadoras y Assembler	;
 ;											;
-; Librería para manejo de strings.			;
+; Librerï¿½a para manejo de strings.			;
 ;											;
-;Eddy Omar Castro Jáuregui - 11032			;
-;Jorge Luis Martínez Bonilla - 11237		;
+;Eddy Omar Castro Jï¿½uregui - 11032			;
+;Jorge Luis Martï¿½nez Bonilla - 11237		;
 ;###########################################;
 
 
 ; ------------------------------------------------------------- ;
-; Esta función recibe un string y regresa el tamaño de la misma
+; Esta funciï¿½n recibe un string y regresa el tamaï¿½o de la misma
 ; en caracteres, sin contar el caracter de fin.
-; @Param [WORD]: Dirección de inicio del string.
-; @return [AX]: Tamaño del string.
+; @Param [WORD]: Direcciï¿½n de inicio del string.
+; @return [AX]: Tamaï¿½o del string.
 ; ------------------------------------------------------------- ;
 STRLEN PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
@@ -37,7 +37,7 @@ STRLEN PROC NEAR
 		
 	STRLEN_FIN_CICLO:
 	
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		DX
 	POP		BX
 	POP		BP
@@ -53,7 +53,7 @@ STR_TO_NUMBER	PROC NEAR
 	.DATA
 		MULTIPLICADOR	DW	10D
 	.CODE
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
@@ -61,7 +61,7 @@ STR_TO_NUMBER	PROC NEAR
 	MOV		BX, [BP+4]
 	MOV		AX, 0
 	MOV		CX,	0		; Este funciona como el acumulador del numero
-	; Revisa el tamaño del string y si todos son numeros
+	; Revisa el tamaï¿½o del string y si todos son numeros
 	STONUM_CICLO:
 		; Revisar por fin de cadena
 		MOV		AL, [BX]
@@ -79,7 +79,7 @@ STR_TO_NUMBER	PROC NEAR
 		JMP		STONUM_FIN
 		
 		STONUM_CONVERTIR:
-		; Si sí es número se convierte a decimal. El acumulador se multiplica por 10 y se le suma el numero
+		; Si sï¿½ es nï¿½mero se convierte a decimal. El acumulador se multiplica por 10 y se le suma el numero
 		MOV		AX, CX
 		MUL		MULTIPLICADOR
 		MOV		CX, AX
@@ -95,23 +95,23 @@ STR_TO_NUMBER	PROC NEAR
 	STONUM_FIN_COPIAR:
 		MOV 	AX, CX
 	STONUM_FIN:
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		BX
 	POP		BP
 	RET
 STR_TO_NUMBER	ENDP
 
 ; ---------------------------------------------------------------------- ;
-; Convierte un numero sin signo en un string hasta un máximo de 65536
-; @param [WORD]: Número a convertir
-; @param [WORD]: Dirección de memoria que pueda contener la cadena junto
-; con el caracter de terminación (6 caracteres).
+; Convierte un numero sin signo en un string hasta un mï¿½ximo de 65536
+; @param [WORD]: Nï¿½mero a convertir
+; @param [WORD]: Direcciï¿½n de memoria que pueda contener la cadena junto
+; con el caracter de terminaciï¿½n (6 caracteres).
 ; ---------------------------------------------------------------------- ;
 NUM_TO_STRING	PROC NEAR
 	.DATA
 		DIVISOR	DW	10D
 	.CODE
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
@@ -141,7 +141,7 @@ NUM_TO_STRING	PROC NEAR
 	PUSH	[BP + 6]
 	CALL	STRINV
 	ADD		SP, 2
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		BX
 	POP		BP
 	RET
@@ -149,10 +149,10 @@ NUM_TO_STRING 	ENDP
 
 ; ------------------------------------------------------------- ;
 ; Invierte el string dado y lo sobreescribe en el mismo buffer.
-; @param [WORD]: Dirección del string a invertir.
+; @param [WORD]: Direcciï¿½n del string a invertir.
 ; ------------------------------------------------------------- ;
 STRINV	PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
@@ -162,12 +162,12 @@ STRINV	PROC NEAR
 	MOV		DX, 0
 	MOV		SI, 0
 	
-	; Obtener el tamaño del string
+	; Obtener el tamaï¿½o del string
 	PUSH	[BP + 4]
 	CALL	STRLEN
 	ADD		SP, 2
 	
-	; Se cicla la mitad del tamaño del string
+	; Se cicla la mitad del tamaï¿½o del string
 	MOV		CX, AX
 	SHR		CX, 1
 	
@@ -184,7 +184,7 @@ STRINV	PROC NEAR
 		INC		SI
 		DEC		DI
 		LOOP	STRINV_CICLO
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		BX
 	POP		BP
 	RET
@@ -192,15 +192,15 @@ STRINV	ENDP
 
 ; ----------------------------------------------------------------- ;
 ; Copia un string de un buffer a otro. El programador se debe de
-; asegurar que el destino tenga el tamaño necesario para que quepa
-; lo que se quiere copiar del base más el caracter de terminación.
-; @param [WORD]: Dirección del string fuente
+; asegurar que el destino tenga el tamaï¿½o necesario para que quepa
+; lo que se quiere copiar del base mï¿½s el caracter de terminaciï¿½n.
+; @param [WORD]: Direcciï¿½n del string fuente
 ; @param [WORD]: Caracteres a copiar
-; @param [WORD]: Dirección del string destino
+; @param [WORD]: Direcciï¿½n del string destino
 ; @return [AX]: Caracteres copiados
 ; ----------------------------------------------------------------- ;
 STRCPY	PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
@@ -229,19 +229,19 @@ STRCPY	PROC NEAR
 	STRCPY_FIN:
 	MOV		BYTE PTR [DI], '$'
 	
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		BX
 	POP		BP
 	RET
 STRCPY	ENDP
 
 ; -------------------------------------------------------- ;
-; Recibe un caracter y revisa si es mayúscula.
+; Recibe un caracter y revisa si es mayï¿½scula.
 ; @param [BYTE]: Caracter a revisar
-; @return [AX]: 0 si no es mayúscula, 1 en caso contrario
+; @return [AX]: 0 si no es mayï¿½scula, 1 en caso contrario
 ; -------------------------------------------------------- ;
 ES_MAYUSCULA	PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
@@ -256,7 +256,7 @@ ES_MAYUSCULA	PROC NEAR
 	MOV		AX, 1
 	
 	ES_MAYUSCULA_FIN:
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		BX
 	POP		BP
 	
@@ -265,12 +265,12 @@ ES_MAYUSCULA	ENDP
 
 
 ; -------------------------------------------------------- ;
-; Recibe un caracter y revisa si es minúscula.
+; Recibe un caracter y revisa si es minï¿½scula.
 ; @param [BYTE]: Caracter a revisar
-; @return [AX]: 0 si no es minúscula, 1 en caso contrario
+; @return [AX]: 0 si no es minï¿½scula, 1 en caso contrario
 ; -------------------------------------------------------- ;
 ES_MINUSCULA	PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
@@ -284,7 +284,7 @@ ES_MINUSCULA	PROC NEAR
 	MOV		AX, 1
 	
 	ES_MINUSCULA_FIN:
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		BX
 	POP		BP
 	
@@ -293,12 +293,12 @@ ES_MINUSCULA	ENDP
 
 
 ; -------------------------------------------------------- ;
-; Recibe un caracter y revisa si es número.
+; Recibe un caracter y revisa si es nï¿½mero.
 ; @param [BYTE]: Caracter a revisar
-; @return [AX]: 0 si no es número, 1 en caso contrario
+; @return [AX]: 0 si no es nï¿½mero, 1 en caso contrario
 ; -------------------------------------------------------- ;
 ES_NUMERO	PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
@@ -313,7 +313,7 @@ ES_NUMERO	PROC NEAR
 	MOV		AX, 1
 	
 	ES_NUMERO_FIN:
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		BX
 	POP		BP
 	
@@ -322,12 +322,12 @@ ES_NUMERO	ENDP
 
 ; ---------------------------------------------------------------- ;
 ; Recibe una cadena de caracteres y convierte todos los caracteres
-; en minúscula a mayúscula.
-; @param [WORD]: Dirección de la cadena a validar
+; en minï¿½scula a mayï¿½scula.
+; @param [WORD]: Direcciï¿½n de la cadena a validar
 ; @return [AX]: Caracteres convertidos
 ; ---------------------------------------------------------------- ;
 CONV_MAYUSCULA	PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
@@ -356,7 +356,7 @@ CONV_MAYUSCULA	PROC NEAR
 	JMP		CONV_MAYUSCULA_CICLO
 	
 	CONV_MAYUSCULA_FIN:
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		BX
 	POP		BP
 	RET
@@ -365,15 +365,15 @@ CONV_MAYUSCULA	ENDP
 ; ---------------------------------------------------------------- ;
 ; Valida que el string dado contenga solo caracteres o numeros.
 ; @param [WORD]: Direccion de la cadena a validar.
-; @param [WORD]: Tamaño de la cadena
+; @param [WORD]: Tamaï¿½o de la cadena
 ; @return [AX]: 0 si la cadena no es valida, y 1 en caso contrario
 ; ---------------------------------------------------------------- ;
 VALIDAR		PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
-	; Obtiene direccion de la cadena y tamaño
+	; Obtiene direccion de la cadena y tamaï¿½o
 	MOV		BX, [BP+4]
 	MOV		CX, [BP+6]
 	
@@ -412,7 +412,7 @@ VALIDAR		PROC NEAR
 	
 	VALIDAR_FIN:
 	MOV		AX, DX
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		BX
 	POP		BP
 	RET

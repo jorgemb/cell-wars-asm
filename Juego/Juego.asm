@@ -1,13 +1,13 @@
 ;###########################################;
 ;Universidad del Valle de Guatemala			;
-;Organización de Computadoras y Assembler	;
+;Organizaciï¿½n de Computadoras y Assembler	;
 ;											;
 ; Este lugar contiene el punto de entrada	;
-; del juego en sí, junto con el ciclo		;
+; del juego en sï¿½, junto con el ciclo		;
 ; del mismo.								;
 ;											;
-;Eddy Omar Castro Jáuregui - 11032			;
-;Jorge Luis Martínez Bonilla - 11237		;
+;Eddy Omar Castro Jï¿½uregui - 11032			;
+;Jorge Luis Martï¿½nez Bonilla - 11237		;
 ;###########################################;
 
 .DATA
@@ -24,7 +24,7 @@ OBTENER_TIEMPO PROC NEAR
 	PUSH	CX
 	PUSH	DX
 	
-	; .. obtiene el tiempo del sistema en centésimas de segundo
+	; .. obtiene el tiempo del sistema en centï¿½simas de segundo
 	MOV		AH, 2CH
 	INT		21H
 	
@@ -38,7 +38,7 @@ OBTENER_TIEMPO PROC NEAR
 	TIEMPO_CAMBIO_FIN:
 	MOV		TIEMPO_SEGUNDO_ANTERIOR, DH
 	
-	; .. calcula la cantidad de centésimas por los segundos
+	; .. calcula la cantidad de centï¿½simas por los segundos
 	MOV		AL, DH		; AL = Segundos
 	MOV		AH, 100		;
 	MUL		AH			; AX = Segundos * 100
@@ -71,7 +71,7 @@ ACTUALIZAR_TIEMPO MACRO DELTA, ANTERIOR, CORRECCION
 	CMP		AX, ANTERIOR
 	JGE		NO_CORREGIR
 	
-	; ..realizar corrección del tiempo
+	; ..realizar correcciï¿½n del tiempo
 	SUB 	ANTERIOR, CORRECCION
 	
 	; .. calcula el delta
@@ -92,19 +92,19 @@ ENDM
 ; --------------------------------------- :
 ; Contiene el punto de entrada del juego.
 ; --------------------------------------- :
-JUGAR PROC NEAR
+PLAY_GAME PROC NEAR
 .DATA
 	TIEMPO_CORRECCION	EQU	6000d
 .CODE
 	; Inicializa el tiempo y variables del juego
-	MOV		TIEMPO_DELTA, 1
-	MOV		JUEGO_ACTIVO, 1
+	MOV		DELTA_TIME, 1
+	MOV		GAME_ACTIVE, 1
 	;CALL 	VIRUS_INICIALIZAR
 	CALL	CAMBIAR_MODO_GRAFICO
 	
 	; .. obtiene el tiempo del sistema
 	CALL	OBTENER_TIEMPO
-	MOV		TIEMPO_ANTERIOR, AX
+	MOV		PREVIOUS_TIME, AX
 	
 	; Inicio del ciclo
 	CICLO_JUGAR:
@@ -115,11 +115,11 @@ JUGAR PROC NEAR
 		CALL 	ACTUALIZAR_GRAFICOS
 		
 		; Calcula el delta del tiempo
-		ACTUALIZAR_TIEMPO 	TIEMPO_DELTA, TIEMPO_ANTERIOR, TIEMPO_CORRECCION
-		FILD	TIEMPO_DELTA
-		FILD	TIEMPO_DIVISOR
+		ACTUALIZAR_TIEMPO 	DELTA_TIME, PREVIOUS_TIME, TIEMPO_CORRECCION
+		FILD	DELTA_TIME
+		FILD	TIME_DIVIDEND
 		FDIV
-		FSTP	TIEMPO_DELTA_F
+		FSTP	PREVIOUS_TIME_F
 		
 		; Revisa las condiciones de victoria
 		; Si alguien gana entonces se sale del juego
@@ -127,41 +127,41 @@ JUGAR PROC NEAR
 		CMP		AX, 00
 		JNE		JUGAR_FIN
 		
-		CMP		JUEGO_ACTIVO, 0
+		CMP		GAME_ACTIVE, 0
 		JNE		CICLO_JUGAR
 	
 	JUGAR_FIN:
 	PUSH	AX
-	CALL	LIMPIAR_TECLADO
+	CALL	CLEAN_KEYBOARD
 	POP		AX
 	
 	PUSH	AX
-	CALL	MOSTRAR_GANADOR
+	CALL	SHOW_WINNER
 	ADD		SP, 2
 	
-	CALL	OCULTAR_CURSOR		
+	CALL	HIDE_CURSOR		
 	CALL	CAMBIAR_MODO_TEXTO
 	RET
-JUGAR ENDP
+PLAY_GAME ENDP
 
 ; ------------------------------ ;
 ; Inicializa los datos del juego
 ; ------------------------------ ;
-INICIALIZAR_JUEGO PROC NEAR
+GAME_INIT PROC NEAR
 	; Inicializa los virus
 	CALL	VIRUS_INICIALIZAR
-	CALL	MOSTRAR_CURSOR
+	CALL	SHOW_CURSOR
 	
-	; Inicializa los fagos
+	; Inicializa los PHAGES
 	CALL	FAGOS_INICIALIZAR
 	
 	RET
-INICIALIZAR_JUEGO ENDP
+GAME_INIT ENDP
 
 ; Determina si alguno de los dos jugadores ha ganado/perdido
 ; el juego.
-; @return [AX]: Regresa 00 si ninguno ha ganado, 01 si ganó
-; el jugador uno y 02 si ganó el jugador dos.
+; @return [AX]: Regresa 00 si ninguno ha ganado, 01 si ganï¿½
+; el jugador uno y 02 si ganï¿½ el jugador dos.
 REVISAR_VICTORIA PROC NEAR
 	; Guardar registros
 	PUSH	BX
@@ -170,20 +170,20 @@ REVISAR_VICTORIA PROC NEAR
 	PUSH	SI
 	PUSH	DI
 	
-	; Itera por cada fago para verificar a qué jugador
-	; pertenece cada uno. Si un jugador no posee ningún fago
+	; Itera por cada fago para verificar a quï¿½ jugador
+	; pertenece cada uno. Si un jugador no posee ningï¿½n fago
 	; entonces pierde.
 	MOV		SI, 0			; Jugador 1
 	MOV		DI, 0			; Jugador 2
-	MOV		CX, CANTIDAD_FAGOS
+	MOV		CX, PHAGE_QUANTITY
 	VICTORIA_CICLO:
-		; Obtiene la dirección del fago
+		; Obtiene la direcciï¿½n del fago
 		MOV		DX, CX
 		DEC		DX
-		FAGO_DIRECCION DX		; La dirección del fago en BX
+		FAGO_DIRECCION DX		; La direcciï¿½n del fago en BX
 		
-		; Revisa de qué jugador es
-		MOV			AL, BYTE PTR FAGO_JUGADOR[BX]
+		; Revisa de quï¿½ jugador es
+		MOV			AL, BYTE PTR PHAGE_PLAYER[BX]
 		CMP			AL, 0FFH
 		JE			VICTORIA_FIN_CICLO
 		
@@ -201,7 +201,7 @@ REVISAR_VICTORIA PROC NEAR
 		VICTORIA_FIN_CICLO:
 		LOOP	VICTORIA_CICLO
 	
-	; Compara si alguno tiene cero fagos
+	; Compara si alguno tiene cero PHAGES
 	MOV		AX, 0
 	
 	; .. J1
@@ -243,7 +243,7 @@ ACTUALIZAR_ENTRADA PROC NEAR
 	RET
 ACTUALIZAR_ENTRADA ENDP
 
-; Actúa conforme se presionen las teclas del jugador 
+; Actï¿½a conforme se presionen las teclas del jugador 
 ; uno para enviar virus de un fago a otro.
 ACTUALIZAR_TECLADO PROC NEAR
 	PUSHA
@@ -258,7 +258,7 @@ ACTUALIZAR_TECLADO PROC NEAR
 	; ESCAPE - Finaliza el juego
 	CMP		AL, 27
 	JNE		ACTUALIZAR_ENTRADA_ESC
-	MOV		JUEGO_ACTIVO, 0	
+	MOV		GAME_ACTIVE, 0	
 	JMP		ACTUALIZAR_TECLADO_FIN
 	
 	ACTUALIZAR_ENTRADA_ESC:
@@ -266,18 +266,18 @@ ACTUALIZAR_TECLADO PROC NEAR
 	MOV		DH, 0
 	MOV		DL, AL
 	
-	; Determina si la tecla que se presionó es un número
+	; Determina si la tecla que se presionï¿½ es un nï¿½mero
 	BP2:
 	PUSH	30H		; Menor
 	PUSH	39H		; Mayor
 	PUSH	DX		; Tecla
-	CALL	VERIFICA_CANTIDAD
+	CALL	VERIFY_VALUE
 	ADD		SP, 6
 	
 	CMP		AH, 0
 	JE		ACTUALIZAR_TECLADO_SHIFT
 	
-	; Lo que se presiono es un número sin shift
+	; Lo que se presiono es un nï¿½mero sin shift
 	; .. selecciona el fago
 	SUB		DX, 30H
 	PUSH	DX
@@ -287,11 +287,11 @@ ACTUALIZAR_TECLADO PROC NEAR
 	JMP		ACTUALIZAR_TECLADO_FIN
 	
 	ACTUALIZAR_TECLADO_SHIFT:
-	; Verifica si los códigos son los de shift
+	; Verifica si los cï¿½digos son los de shift
 	PUSH	20H		; Menor
 	PUSH	29H		; Mayor
 	PUSH	DX		; Tecla
-	CALL	VERIFICA_CANTIDAD
+	CALL	VERIFY_VALUE
 	ADD		SP, 6
 	
 	CMP		AH, 0
@@ -332,13 +332,13 @@ ACTUALIZAR_TECLADO PROC NEAR
 	RET
 ACTUALIZAR_TECLADO ENDP
 
-; Actualiza el mouse en pantalla, y actúa si se presiona
+; Actualiza el mouse en pantalla, y actï¿½a si se presiona
 ; clic izquierdo o derecho sobre un fago.
 ACTUALIZAR_MOUSE PROC NEAR
 	; Guardar registros
 	PUSHA
 
-	CALL	DATOS_MOUSE
+	CALL	MOUSE_DATA
 	
 	; Se guardan los datos del mouse en su pseudo-virus
 	MOV		BX, OFFSET MOUSE_PSEUDOVIRUS
@@ -353,7 +353,7 @@ ACTUALIZAR_MOUSE PROC NEAR
 	
 	; Verificar estado de los botones
 	; .. mouse izquierdo
-	CMP		CLICK_IZQUIERDO, 01H
+	CMP		LEFT_CLICK, 01H
 	JNE		ACTUALIZAR_MOUSE_DERECHO
 	
 	PUSH	OFFSET MOUSE_PSEUDOVIRUS
@@ -382,7 +382,7 @@ ACTUALIZAR_MOUSE PROC NEAR
 	CMP		AH, 01
 	JNE		ACTUALIZAR_MOUSE_FIN
 	
-	; .. envía virus del fago seleccionado al objetivo
+	; .. envï¿½a virus del fago seleccionado al objetivo
 	MOV		AH, 0
 	MOV		DX, AX		; DX contiene el fago destino
 	
@@ -411,7 +411,7 @@ ACTUALIZAR_MOUSE PROC NEAR
 ACTUALIZAR_MOUSE ENDP
 
 ; ---------------------------------------------------- ;
-; Actualiza toda la simulación de los elementos del
+; Actualiza toda la simulaciï¿½n de los elementos del
 ; juego.
 ; ---------------------------------------------------- ;
 ACTUALIZAR_LOGICA PROC NEAR
@@ -419,7 +419,7 @@ ACTUALIZAR_LOGICA PROC NEAR
 	; Actualiza los virus
 	CALL 	VIRUS_ACTUALIZAR
 	
-	; Actualiza los fagos cada segundo
+	; Actualiza los PHAGES cada segundo
 	CMP		TIEMPO_CAMBIO_SEGUNDO, 00H
 	JE		LOGICA_NO_FAGOS
 	CALL	FAGOS_ACTUALIZAR
@@ -435,7 +435,7 @@ ACTUALIZAR_LOGICA ENDP
 ACTUALIZAR_GRAFICOS PROC NEAR
 	PUSHA
 
-	; Borra lo que había en pantalla
+	; Borra lo que habï¿½a en pantalla
 	; MOV		AX, 00H
 	; MOV		DI, 0000H
 	; MOV		CX, 64000
@@ -444,23 +444,23 @@ ACTUALIZAR_GRAFICOS PROC NEAR
 	; LIMPIAR_BUFFER 0A000H, 64000, 0FFH
 	
 	; Itera por cada uno de los virus y los dibuja
-	MOV		CX, CANTIDAD_VIRUS
+	MOV		CX, VIRUS_QUANTITY
 	ACTUALIZAR_GRAFICOS_CICLO:	
-		; Obtiene la dirección del virus
+		; Obtiene la direcciï¿½n del virus
 		VIRUS_DIRECCION	CX
-		SUB		BX, TAMANO_VIRUS	; Corrección de posición
-		; Verifica si el virus es válido
+		SUB		BX, VIRUS_SIZE	; Correcciï¿½n de posiciï¿½n
+		; Verifica si el virus es vï¿½lido
 		VIRUS_VALIDO BX
 		JZ		ACTUALIZAR_GRAFICOS_CICLO_FIN
-		MOVZX	DX, BYTE PTR VIRUS_FUENTE[BX]
+		MOVZX	DX, BYTE PTR VIRUS_SOURCE[BX]
 		
-		; Obtiene la posición del virus, copia PosX en BX y PosY en AX
+		; Obtiene la posiciï¿½n del virus, copia PosX en BX y PosY en AX
 		VIRUS_POSICION BX, BX, AX
 		
 		; .. DIBUJAR ACA
 		PUSH	BX
 		FAGO_DIRECCION DX		
-		MOVZX	DX, BYTE PTR FAGO_JUGADOR[BX]
+		MOVZX	DX, BYTE PTR PHAGE_PLAYER[BX]
 		POP		BX	
 		SHR		DX, 1
 		CMP		DX, 0
@@ -473,37 +473,37 @@ ACTUALIZAR_GRAFICOS PROC NEAR
 		ACTUALIZAR_GRAFICOS_CICLO_FIN:
 	LOOP ACTUALIZAR_GRAFICOS_CICLO
 	
-	; Dibuja los fagos
-	MOV		CX, CANTIDAD_FAGOS
+	; Dibuja los PHAGES
+	MOV		CX, PHAGE_QUANTITY
 	ACTUALIZAR_FAGOS_CICLO:
-		; Obtiene la dirección del fago
+		; Obtiene la direcciï¿½n del fago
 		FAGO_DIRECCION	CX
-		SUB		BX, TAMANO_FAGO	; Corrección de posición
+		SUB		BX, PHAGE_SIZE	; Correcciï¿½n de posiciï¿½n
 	
 		; Verificar si el fago se debe de dibujar
-		CMP		WORD PTR FAGO_IMAGEN[BX], 0
+		CMP		WORD PTR PHAGE_IMAGE[BX], 0
 		JE		ACTUALIZAR_FAGO_NO_DIBUJO
 	
-		MOVZX	DX, BYTE PTR FAGO_JUGADOR[BX]
+		MOVZX	DX, BYTE PTR PHAGE_PLAYER[BX]
 		PUSH	DX
-		PUSH	WORD PTR FAGO_Y[BX]
-		PUSH	WORD PTR FAGO_X[BX]
-		PUSH 	WORD PTR FAGO_IMAGEN[BX]
+		PUSH	WORD PTR PHAGE_Y[BX]
+		PUSH	WORD PTR PHAGE_X[BX]
+		PUSH 	WORD PTR PHAGE_IMAGE[BX]
 		CALL	DIBUJAR_FAGO
 		ADD		SP, 8
 			
-		PUSH	WORD PTR FAGO_Y[BX]
-		PUSH	WORD PTR FAGO_X[BX]
-		PUSH 	WORD PTR FAGO_NVIRUS[BX]
+		PUSH	WORD PTR PHAGE_Y[BX]
+		PUSH	WORD PTR PHAGE_X[BX]
+		PUSH 	WORD PTR PHAGE_NVIRUS[BX]
 		CALL	IMPRIMIR_CANTIDAD_VIRUS
 		ADD		SP, 6		
 	
 		ACTUALIZAR_FAGO_NO_DIBUJO:
 	LOOP ACTUALIZAR_FAGOS_CICLO	
 	
-	; Dibuja la posición del mouse utilizando su pseudo-virus
+	; Dibuja la posiciï¿½n del mouse utilizando su pseudo-virus
 	MOV		BX, OFFSET MOUSE_PSEUDOVIRUS	
-	; ..Obtiene la posición del virus, copia PosX en BX y PosY en AX
+	; ..Obtiene la posiciï¿½n del virus, copia PosX en BX y PosY en AX
 	VIRUS_POSICION BX, BX, AX
 	DIBUJAR_VIRUS BX, AX, 64H
 	

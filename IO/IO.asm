@@ -1,18 +1,11 @@
 ;###########################################;
-;Universidad del Valle de Guatemala			;
-;Organización de computadoras y Assembler	;
-;											;
-;Libreria para manejo de entrada y salida	;
-;con consola.								;
-;											;
-;Eddy Omar Castro Jáuregui - 11032			;
-;Jorge Luis Martínez Bonilla - 11237		;
+; Input/Output library						;
 ;###########################################;
 
 ; ------------------------------------------ ;
-; Esta funcion limpia el buffer de teclado.
+; Cleans keyboard buffer.
 ; ------------------------------------------ ;
-LIMPIAR_TECLADO	PROC NEAR
+CLEAN_KEYBOARD	PROC NEAR
 
 	MOV		AH, 0CH
 	MOV		AL, 06H
@@ -20,16 +13,16 @@ LIMPIAR_TECLADO	PROC NEAR
 	
 	RET
 
-LIMPIAR_TECLADO ENDP
+CLEAN_KEYBOARD ENDP
 
 ; ---------------------------------------------------- ;
-; Esta funcion retorna el codigo de rastreo
-; @return [AH]: Codigo de rastreo
-; @return [AL]: caracter ASCII o 0 en extendido
+; Returns key scan code.
+; @return [AH]: Scan code
+; @return [AL]: ASCII character, or 0 in extended.
 ; ---------------------------------------------------- ;
 GET_SCANCODE	PROC NEAR
 	
-	; Obtener el codigo de rastreo usando la funcion 10H de la interrupcion 16H
+	; Function 10H of the 16H interrupt
 	MOV		AH, 10H
 	INT		16H
 		
@@ -37,22 +30,21 @@ GET_SCANCODE	PROC NEAR
 GET_SCANCODE	ENDP
 
 ; ---------------------------------------------------- ;
-; Esta funcion despliega un solo caracter enr pantalla.
-; @param [BYTE]: Caracter a desplegar
+; Displays a single character on the screen.
+; @param [BYTE]: Char to display
 ; ---------------------------------------------------- ;
 PUTC	PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
 	PUSH	DX
 	
-	; Escribir el caracter en pantalla usando la funcion 02H de la interrupcion 21H
 	MOV		DX, [BP+4]
 	MOV		AH, 02H
 	INT		21H
 		
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		DX
 	POP		BX
 	POP		BP
@@ -60,36 +52,36 @@ PUTC	PROC NEAR
 PUTC	ENDP
 
 ; ----------------------------------------------- ;
-; Esta funcion recibe un caracter de la pantalla.
+; Gets a single char from the screen.
 ; @param [BYTE]: Echo [1 -> echo; 0 -> no echo]
-; @return [AL]: Caracter de entrada
+; @return [AL]: Input character
 ; ----------------------------------------------- ;
 GETC	PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
 	PUSH	DX
 
-	; Revisa la variable Echo para ver si se imprime echo o no
+	; Checks the echo variable
 	MOV		DX, [BP+4]
 	CMP		DX, 0
-	JE		GETC_SIN_ECHO
+	JE		GETC_NO_ECHO
 	
-	GETC_CON_ECHO:
+	GETC_WITH_ECHO:
 	MOV		AH, 01H
 	INT		21H
 	JMP		GETC_FIN
 	
-	GETC_SIN_ECHO:
+	GETC_NO_ECHO:
 	MOV		AH, 07H
 	INT		21H
 	
-	; Limpia la parte alta del registro AX para que en AX quede unicamente el caracter de retorno
+	; Cleans the upper part of the AX register, so the char is in AL.
 	GETC_FIN:
 	MOV		AH, 0
 	
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		DX
 	POP		BX
 	POP		BP
@@ -97,46 +89,47 @@ GETC	PROC NEAR
 GETC	ENDP
 
 ; ----------------------------------------------- ;
-; Esta funcion regresa el código de rastreo.
-; @param [BYTE]: Tipo [0 -> imprimible; 1 -> extendido]
-; @return [AL]: Tecla presionada
+; Returns the extended scan code.
+; @param [BYTE]: Type [0 -> printable; 1 -> extended]
+; @return [AL]: Pressed key
 ; ----------------------------------------------- ;
 GETC_EXTENDED	PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
 	PUSH	DX
 
 	; Revisa la variable Tiop para ver si se desea caracter imprimible o extendido
+	; Checks the Type variable to look for a printable or extended character.
 	MOV		DX, [BP+4]
 	CMP		DX, 0
-	JE		GETC_IMPRIMIBLE
+	JE		GETC_PRINTABLE
 	
 	MOV		AH, 06H
 	MOV		DL, 0FFH
 	INT		21H
 	
-	GETC_IMPRIMIBLE:
+	GETC_PRINTABLE:
 	MOV		AH, 06H
 	MOV		DL, 0FFH
 	INT		21H
 	
 	MOV		DX, [BP+4]
 	CMP		DX, 1
-	JE		GETC_EXTENDIDO	
+	JE		GETC_EXTENDED_ENTRY	
 	
 	CMP		AL, 0
-	JNE		GETC_EXTENDIDO
+	JNE		GETC_EXTENDED_ENTRY
 	MOV		AH, 06H
 	MOV		DL, 0FFH
 	INT		21H
 	
-	GETC_EXTENDIDO:
-	; Limpia la parte alta del registro AX para que en AX quede unicamente el caracter de retorno
+	GETC_EXTENDED_ENTRY:
+	; Cleans the AH part of the register, so AL is the sole part with the character
 	MOV		AH, 0
 	
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		DX
 	POP		BX
 	POP		BP
@@ -144,29 +137,29 @@ GETC_EXTENDED	PROC NEAR
 GETC_EXTENDED	ENDP
 
 ; ----------------------------------------------------------- ;
-; Muestra un string en pantalla.
-; @param [WORD]: Direccion de la primera posicion del string.
-; @return [AX]: Cantidad de caracteres escritos
+; Prints a string on screen
+; @param [WORD]: Address of the first position in the string.
+; @return [AX]: Amount of written characters.
 ; ----------------------------------------------------------- ;
 COUT	PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
 	PUSH	CX
 	PUSH	DX
 	
-	; Obtiene la direccion del string
-	MOV		AX, 0		; Contador de caracteres
+	; Gets the address of the string
+	MOV		AX, 0		; Character count
 	MOV		BX, [BP+4]
 	MOV		CX, [BP+6]
 	
-	; Muestra el string caracter por caracter
+	; Print characters, one by one
 	MOV		DH,	0
-	COUT_CICLO:
+	COUT_CYCLE:
 	MOV		DL, [BX]
 	CMP		DL, '$'
-	JE		COUT_FIN
+	JE		COUT_END
 	
 	PUSH	DX
 	CALL	PUTC
@@ -174,10 +167,10 @@ COUT	PROC NEAR
 	
 	INC		BX
 	INC		AX
-	JMP		COUT_CICLO
+	JMP		COUT_CYCLE
 	
-	COUT_FIN:
-	; PILA - Regresar al estado inicial
+	COUT_END:
+	; STACK - Restore
 	POP		DX
 	POP		CX
 	POP		BX
@@ -187,57 +180,59 @@ COUT	PROC NEAR
 COUT	ENDP
 
 ; ------------------------------------------------------------------------------ ;
-; Recibe entrada desde la consola, desde el primer caracter hasta que el usuario
-; presione enter o llene la cantidad maxima de caracteres a utilizar.
-; @param [WORD]: Direccion del buffer de salida
-; @param [WORD]: Cantidad de datos a leer
-; @return [AX]: Cantidad de caracteres leidos
+; Receives input from the console, from the first character until the buffer is
+; full or the user presses <return>.
+; @param [WORD]: Output buffer address
+; @param [WORD]: Amount of characters to read
+; @return [AX]: Read characters
 ; ------------------------------------------------------------------------------ ;
 CIN		PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
-	; Carga la direccion de salida en BX y la cantidad de caracteres en CX
+
+	; BX=output address, CX=amount of characters
 	MOV		BX, [BP + 4]
 	MOV		CX, [BP + 6]
 	
-	PUSH	0	; Para mostrar echo en la funcion GETC
-	CIN_CICLO:
+	PUSH	0	; Show ECHO with GETC
+	CIN_CYCLE:
 	CALL 	GETC
 	CMP		AL, 0DH
-	JE		CIN_FIN_CICLO
+	JE		CIN_END_CYCLE
 	
 	CMP		AL, 08H
 	JNE		CIN_NO_BACKSPACE
 	
-	CMP		CX, [BP+6]		; Si la cantidad de caracteres es cero entonces no se borra nada
-	JE		CIN_CICLO
+	CMP		CX, [BP+6]		; If char amount is zero nothing is erased
+	JE		CIN_CYCLE
 	PUSH	AX
 	CALL	PUTC
 	ADD		SP, 2
 	
 	INC		CX
 	DEC		BX
-	JMP		CIN_CICLO
-	; Hacer eco del caracter en la pantalla (Solo si no es enter o backspace)
+	JMP		CIN_CYCLE
+	; Echo character if not backspace or return.
 	CIN_NO_BACKSPACE:
 	PUSH	AX
 	CALL	PUTC
 	ADD		SP, 2
 	
-	; Agrega el nuevo caracter
+	; Add new character
 	MOV		[BX], AL
 	INC		BX
-	LOOP	CIN_CICLO
+	LOOP	CIN_CYCLE
 	
-	CIN_FIN_CICLO:
-	ADD		SP, 2	; Quita los parametros de GETC
-	; Calcula la cantidad de caracteres leidos y agrega el caracter de fin de string
+	CIN_END_CYCLE:
+	ADD		SP, 2	; Removes GETC parameters
+
+	; Calculates amount of read characters and adds the end character.
 	MOV		AX, [BP+6]
 	SUB		AX, CX
 	MOV		[BX], BYTE PTR '$'
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		BX
 	POP		BP
 	RET
@@ -245,10 +240,9 @@ CIN		ENDP
 
 
 ; ------------------------------- ;
-; Ingresa un enter en la consola.
+; Puts a return char in the console.
 ; ------------------------------- ;
 PUT_ENTER	PROC NEAR
-	; Pone en pantalla los caracteres de carriage return y line feed.
 	PUSH	0DH
 	CALL	PUTC
 	
@@ -261,56 +255,55 @@ PUT_ENTER	ENDP
 
 
 ; ---------------------------------------------------------------------------------;
-; Esta funcion verifica que la cantidad seleccionada se encuentre dentro del rango.
-; @param [BYTE]: Cantidad a comparar.
-; @param [BYTE]: Cantidad mayor.
-; @param [BYTE]: Cantidad menor.
-; @return [AH]: 0 si la cadena no es valida, y 1 en caso contrario
+; Verifies that the value is inside a given range.
+; @param [BYTE]: Value
+; @param [BYTE]: Upper limit
+; @param [BYTE]: Lower limit
+; @return [AH]: 0 in case of invalid value, 1 otherwise
 ; ---------------------------------------------------------------------------------;
-VERIFICA_CANTIDAD	PROC NEAR
-	; PILA - Preparar
+VERIFY_VALUE	PROC NEAR
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	DX
 
 	MOV		AH, 1
-	; Verificar que es menor a 5
+	; Upper limit
 	MOV		DL, BYTE PTR [BP+6]
 	CMP		BYTE PTR [BP+4], DL
-	JG		NO_VALIDO
+	JG		INVALID
 	
-	; Verificar que es mayor a 1
+	; Lower limit
 	MOV	DL, BYTE PTR [BP+8]
 	CMP		BYTE PTR [BP+4], DL
-	JL		NO_VALIDO
+	JL		INVALID
 	
-	JMP		SI_VALIDO
+	JMP		VALID
 	
-	NO_VALIDO:
+	INVALID:
 	MOV		AH, 0
 	
-	SI_VALIDO:
-	; PILA - Regresar al estado inicial
+	VALID:
+	; STACK - Restore
 	POP		DX
 	POP		BP
 	
 	RET
-VERIFICA_CANTIDAD	ENDP
+VERIFY_VALUE	ENDP
 
 ; ---------------------------------------------------------- ;
-; Pide un ingreso al usuario de un dígito, asegurándose que
-; se encuentre en un rango numérico dado. Siempre devuelve
-; un valor correcto.
-; @param[BYTE]: Cantidad mayor.
-; @param[BYTE]: Cantidad menor.
-; @return[AX]: Valor ingresado
+; Asks the user to enter a digit, checking that is inside
+; the specified range. Always returns a valid value.
+; @param[BYTE]: Upper limit
+; @param[BYTE]: Lower limit
+; @return[AX]: Amount entered
 ; ---------------------------------------------------------- ;
-ENTRADA_NUMERICA	PROC NEAR
-	; PILA - Preparar
+NUMERIC_ENTRY	PROC NEAR
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
-	ENTRADA_VALIDAR:
+	ENTRY_VALIDATION:
 			MOV		AX, 0
 			PUSH	0
 			CALL	GETC
@@ -320,24 +313,24 @@ ENTRADA_NUMERICA	PROC NEAR
 			PUSH	WORD PTR [BP+6]
 			PUSH	WORD PTR [BP+4]
 			PUSH	AX
-			CALL	VERIFICA_CANTIDAD
+			CALL	VERIFY_VALUE
 			ADD		SP, 6
 			
 			CMP		AH, 0
-			JE		ENTRADA_VALIDAR
-	; Copia el valor en AL y limpia AH
+			JE		ENTRY_VALIDATION
+
 	MOV		AH, 0	
 	PUSH	AX
 	
-	; Realiza un eco del caracter ingresado
+	; Echo the entered value
 	ADD		AX, 30H
 	PUSH	AX
 	CALL	PUTC
 	ADD		SP, 2
 	
 	POP		AX
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	POP		BX
 	POP		BP
 	RET
-ENTRADA_NUMERICA	ENDP
+NUMERIC_ENTRY	ENDP

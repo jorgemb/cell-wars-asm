@@ -1,91 +1,90 @@
 ; Universidad del Valle de Guatemala
-; Departamento de Computacion
+; Computer Science Department
 ;
-; Autores:
+; Authors:
 ;	Eddy Omar Castro
 ;	Jorge Luis Martínez
 ;
-; Proyecto 1 - Taller de Assembler
-;	Este proyecto consiste en un juego basado en el juego online
-;	llamado Phage Wars (https://armorgames.com/play/2675/phage-wars).
+; Translation to English:
+;	Jorge Luis Martínez
 ;
+;	Clone of the online game Phage Wars by Armor Games.
+;	https://armorgames.com/play/2675/phage-wars
 
 .MODEL LARGE
 .STACK 10024
 
-; Segmento que contiene los datos para hacer Double Buffering.
+; Segment for double buffering
 DBUFFER	SEGMENT
-	BUFFER_PANTALLA		DB	320*200 DUP(0)
+	SCREEN_BUFFER		DB	320*200 DUP(0)
 ENDS
 
 .386
 .DATA                    
 ; ------------------------------------------------------------ ;
-; DEFINICION DE DATOS
+; DATA DEFINITION
 ; ------------------------------------------------------------ ;
 
-; DATOS PARA LOS VIRUS --------------------------------------- ;
-; La estructura para un virus es de la siguiente manera:
-; (Los float equivalen a un dword, es decir 32-bits o 4 bytes)
-;	- float PosicionX
-;	- float PosicionY
-;	- byte FagoDestino
-;	- byte FagoFuente
-; TOTAL: 10 Bytes por virus
-CANTIDAD_VIRUS		EQU		1000
-TAMANO_VIRUS		EQU		10
+; VIRUS DATA ------------------------------------------------- ;
+; Floats are the size of a dword (32 bits or 4 bytes)
+;	- float PosX
+;	- float PosY
+;	- byte TargetPhage
+;	- byte SourcePhage
+; TOTAL: 10 Bytes per virus
+VIRUS_QUANTITY		EQU		1000
+VIRUS_SIZE		EQU		10
 
 
 VIRUS_X				EQU		0
 VIRUS_Y				EQU		4
-VIRUS_FAGO			EQU		8
-VIRUS_FUENTE		EQU		9
-VIRUS				DT		CANTIDAD_VIRUS DUP ( 0 )
+VIRUS_PHAGE			EQU		8
+VIRUS_SOURCE		EQU		9
+VIRUS				DT		VIRUS_QUANTITY DUP ( 0 )
 ; ------------------------------------------------------------ ;
 
-; DATOS PARA LOS FAGOS---------------------------------------- ;
-; La estructura de los fagos es de la siguiente manera
+; PHAGE DATA ------------------------------------------------- ;
 ;	- word	PosX
 ;	- word	PosY
-;	- byte	Radio
-;	- byte	Jugador Due�o (FF = Neutro, 00 � 01 = Jugador1, 02 � 03 = Jugador2)
-;	- word	Imagen
-;	- word	Cantidad de Virus
-; TOTAL: 10 bytes por fago
-CANTIDAD_FAGOS		EQU		10
-TAMANO_FAGO			EQU		10
-FAGOS_TOTAL_BYTES	EQU		CANTIDAD_FAGOS*TAMANO_FAGO
+;	- byte	Radius
+;	- byte	Owner (FF = Neutral, 00 or 01 = Player1, 02 or 03 = Player2)
+;	- word	Image
+;	- word	Virus Quantity
+; TOTAL: 10 bytes per fago
+PHAGE_QUANTITY		EQU		10
+PHAGE_SIZE			EQU		10
+PHAGE_TOTAL_BYTES	EQU		PHAGE_QUANTITY*PHAGE_SIZE
 
-FAGO_X				EQU		0
-FAGO_Y				EQU		2
-FAGO_RADIO			EQU		4
-FAGO_JUGADOR		EQU		5
-FAGO_IMAGEN			EQU		6
-FAGO_NVIRUS			EQU		8
-FAGOS				DT		CANTIDAD_FAGOS DUP ( 00000000FF0000000000H )
+PHAGE_X				EQU		0
+PHAGE_Y				EQU		2
+PHAGE_RADIUS		EQU		4
+PHAGE_PLAYER		EQU		5
+PHAGE_IMAGE			EQU		6
+PHAGE_NVIRUS		EQU		8
+PHAGES				DT		PHAGE_QUANTITY DUP ( 00000000FF0000000000H )
 ; ------------------------------------------------------------ ;
 
-; Datos de tiempo
-TIEMPO_DELTA		DW		1		; Delta en el tiempo de frame a frame
-TIEMPO_ANTERIOR		DW		0		; Contiene el tiempo del frame anterior
-TIEMPO_DELTA_F		DD		0.0		; Contiene el delta del tiempo en formato de punto flotante.
-TIEMPO_DIVISOR		DW		100
+; Time data
+DELTA_TIME			DW		1		; Time delta from frame to frame
+PREVIOUS_TIME		DW		0		; Time of the last frame
+PREVIOUS_TIME_F		DD		0.0		; Time of the last frame in floating point format
+TIME_DIVIDEND		DW		100
 
-; Variables de control
-VIRUS_VELOCIDAD		DD		20.0		; Contiene la velocidad de los virus (en pixeles por segundo).
-JUEGO_ACTIVO		DB		1			; Cuando se pone en cero entonces el juego acaba.
+; Control variables
+VIRUS_VELOCITY		DD		20.0		; Virus velocity, in pixels per second.
+GAME_ACTIVE			DB		1			; Game ends when this reaches zero.
 
-MOUSE_PSEUDOVIRUS	DT		01516FFFFFFFFFFFFFFFFH		; Pseudo-virus utilizado para mostrar el mouse		
+MOUSE_PSEUDOVIRUS	DT		01516FFFFFFFFFFFFFFFFH		; Pseudovirus for mouse display.
 
 .CODE
 ; ------------------------------------------------------------ ;
-; INICIO DEL C�DIGO
+; CODE START
 ; ------------------------------------------------------------ ;
 
-; Librer�as externas
-INCLUDE Random.asm
-INCLUDE	/IO/MouseM.asm
-INCLUDE	/IO/Consola.asm
+; External libraries
+INCLUDE random.asm
+INCLUDE	/IO/mouse_m.asm
+INCLUDE	/IO/console.asm
 INCLUDE	/IO/IO.asm
 INCLUDE /IO/Mouse.asm
 
@@ -97,31 +96,31 @@ INCLUDE /Juego/Graficos.asm
 INCLUDE /Juego/Juego.asm
 
 ; ------------------------------ ;
-; Salida del programa 
+; Program exit
 ; ------------------------------ ;
-SALIR PROC NEAR
+EXIT_GAME PROC NEAR
 	
 	PUSH	0
 	PUSH	0
 	CALL	GOTOXY
 	ADD		SP, 4	
 	
-	CALL	OCULTAR_CURSOR	
+	CALL	HIDE_CURSOR	
 	
 	CALL	CLEAR_SCREEN
 	
-    MOV AH, 4CH   		;salida al DOS
+    MOV AH, 4CH   		;exit to DOS
 	INT 21H
 	
-SALIR ENDP
+EXIT_GAME ENDP
 	
 ; ------------------------------ ;
-; Punto de entrada del programa. 
+; Game entry point				 ;
 ; ------------------------------ ;
 MAIN	PROC FAR
-	.STARTUP		; otra forma de inicializar el segmento
+	.STARTUP
 	
-	CALL	MOSTRAR_MENU	
+	CALL	SHOW_MENU	
 	
 MAIN	ENDP
 

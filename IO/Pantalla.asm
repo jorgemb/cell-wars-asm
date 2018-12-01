@@ -1,17 +1,17 @@
 ;###########################################;
 ;Universidad del Valle de Guatemala			;
-;Organización de Computadoras y Assembler	;
+;Organizaciï¿½n de Computadoras y Assembler	;
 ;											;
-; Librería con varias utilidades para		;
-; trabajar con los modos gráficos.			;
+; Librerï¿½a con varias utilidades para		;
+; trabajar con los modos grï¿½ficos.			;
 ;											;
-;Eddy Omar Castro Jáuregui - 11032			;
-;Jorge Luis Martínez Bonilla - 11237		;
+;Eddy Omar Castro Jï¿½uregui - 11032			;
+;Jorge Luis Martï¿½nez Bonilla - 11237		;
 ;###########################################;
 
 ; ----------------------------------------------------------- ;
 ; Dibuja una linea del punto1 al punto2 (dado). Basado en el
-; algoritmo Bresenham para dibujar líneas.
+; algoritmo Bresenham para dibujar lï¿½neas.
 ; [WORD]: Posicion x0
 ; [WORD]: Posicion y0
 ; [WORD]: Posicion x1
@@ -21,7 +21,7 @@
 ; [WORD]: Ancho de la pantalla del modo actual.
 ; ----------------------------------------------------------- ;
 DIBUJAR_LINEA PROC NEAR
-	; PILA - Preparar
+	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
 	PUSHA
@@ -122,7 +122,7 @@ DIBUJAR_LINEA PROC NEAR
 		
 
 	DIBUJAR_FINAL:
-	; PILA - Regresar al estado inicial
+	; STACK - Restore
 	ADD		SP, 10	; Liberar las variables locales
 	POPA
 	POP		BP

@@ -8,14 +8,14 @@
 .STACK 2048
 
 DBUFFER	SEGMENT
-	BUFFER_PANTALLA		DB	320*200 DUP(0)
+	SCREEN_BUFFER		DB	320*200 DUP(0)
 ENDS
 
 .386
 .DATA                 
-TIEMPO_DELTA		DW		1		; Delta en el tiempo de frame a frame
-TIEMPO_ANTERIOR		DW		0		; Contiene el tiempo del frame anterior
-JUEGO_ACTIVO		DB		1		; Cuando se pone en cero entonces el juego acaba.
+DELTA_TIME		DW		1		; Delta en el tiempo de frame a frame
+PREVIOUS_TIME		DW		0		; Contiene el tiempo del frame anterior
+GAME_ACTIVE		DB		1		; Cuando se pone en cero entonces el juego acaba.
 
 ; DATOS PARA LOS VIRUS --------------------------------------- ;
 ; La estructura para un virus es de la siguiente manera:
@@ -25,42 +25,42 @@ JUEGO_ACTIVO		DB		1		; Cuando se pone en cero entonces el juego acaba.
 ;	- byte FagoDestino
 ;	- byte FagoFuente
 ; TOTAL: 10 Bytes por virus
-CANTIDAD_VIRUS		EQU		1000
-TAMANO_VIRUS		EQU		10
+VIRUS_QUANTITY		EQU		1000
+VIRUS_SIZE		EQU		10
 
 
 VIRUS_X				EQU		0
 VIRUS_Y				EQU		4
-VIRUS_FAGO			EQU		8
-VIRUS_FUENTE		EQU		9
-VIRUS				DT		CANTIDAD_VIRUS DUP ( 0 )
+VIRUS_PHAGE			EQU		8
+VIRUS_SOURCE		EQU		9
+VIRUS				DT		VIRUS_QUANTITY DUP ( 0 )
 ; ------------------------------------------------------------ ;
 
-; DATOS PARA LOS FAGOS---------------------------------------- ;
-; La estructura de los fagos es de la siguiente manera
+; DATOS PARA LOS PHAGES---------------------------------------- ;
+; La estructura de los PHAGES es de la siguiente manera
 ;	- word	PosX
 ;	- word	PosY
 ;	- byte	Radio
-;	- byte	Jugador Dueño (FF = Neutro, 00 ó 01 = Jugador1, 02 ó 03 = Jugador2)
+;	- byte	Jugador Dueï¿½o (FF = Neutro, 00 ï¿½ 01 = Jugador1, 02 ï¿½ 03 = Jugador2)
 ;	- word	Imagen
 ;	- word	Cantidad de Virus
 ; TOTAL: 10 bytes por fago
-CANTIDAD_FAGOS		EQU		10
-TAMANO_FAGO			EQU		10
-FAGOS_TOTAL_BYTES	EQU		CANTIDAD_FAGOS*TAMANO_FAGO
+PHAGE_QUANTITY		EQU		10
+PHAGE_SIZE			EQU		10
+PHAGE_TOTAL_BYTES	EQU		PHAGE_QUANTITY*PHAGE_SIZE
 
-FAGO_X				EQU		0
-FAGO_Y				EQU		2
-FAGO_RADIO			EQU		4
-FAGO_JUGADOR		EQU		5
-FAGO_IMAGEN			EQU		6
-FAGO_NVIRUS			EQU		8
-FAGOS				DT		CANTIDAD_FAGOS DUP ( 00000000FF0000000000H )
+PHAGE_X				EQU		0
+PHAGE_Y				EQU		2
+PHAGE_RADIUS			EQU		4
+PHAGE_PLAYER		EQU		5
+PHAGE_IMAGE			EQU		6
+PHAGE_NVIRUS			EQU		8
+PHAGES				DT		PHAGE_QUANTITY DUP ( 00000000FF0000000000H )
 ; ------------------------------------------------------------ ;
 
-TIEMPO_DELTA_F		DD		0.0
-TIEMPO_DIVISOR		DW		100
-VIRUS_VELOCIDAD		DD		20.0
+PREVIOUS_TIME_F		DD		0.0
+TIME_DIVIDEND		DW		100
+VIRUS_VELOCITY		DD		20.0
 
 MOUSE_PSEUDOVIRUS	DT		0		; Pseudo-virus utilizado para mostrar el mouse		
 ; AGREGAR
@@ -68,7 +68,7 @@ MOUSE_PSEUDOVIRUS	DT		0		; Pseudo-virus utilizado para mostrar el mouse
 .CODE
 INCLUDE Random.asm
 INCLUDE Juego/Graficos.asm
-INCLUDE /Juego/Fagos.asm
+INCLUDE /Juego/PHAGES.asm
 INCLUDE Juego/Virus.asm
 INCLUDE Juego/Juego.asm
 
@@ -84,22 +84,22 @@ INICIALIZAR PROC NEAR
 	CALL	FAGOS_INICIALIZAR
 	
 	; ; FAGO 1
-	; MOV		BX, OFFSET FAGOS
-	; MOV		WORD PTR FAGO_X[BX], 30
-	; MOV		WORD PTR FAGO_Y[BX], 30
-	; MOV		BYTE PTR FAGO_RADIO[BX], 15
-	; MOV		BYTE PTR FAGO_JUGADOR[BX], 0
-	; MOV		WORD PTR FAGO_IMAGEN[BX], OFFSET FAGO_2
-	; MOV		WORD PTR FAGO_NVIRUS[BX], 10
+	; MOV		BX, OFFSET PHAGES
+	; MOV		WORD PTR PHAGE_X[BX], 30
+	; MOV		WORD PTR PHAGE_Y[BX], 30
+	; MOV		BYTE PTR PHAGE_RADIUS[BX], 15
+	; MOV		BYTE PTR PHAGE_PLAYER[BX], 0
+	; MOV		WORD PTR PHAGE_IMAGE[BX], OFFSET FAGO_2
+	; MOV		WORD PTR PHAGE_NVIRUS[BX], 10
 	
 	; ; FAGO 2
-	; ADD		BX, TAMANO_FAGO
-	; MOV		WORD PTR FAGO_X[BX], 100
-	; MOV		WORD PTR FAGO_Y[BX], 100
-	; MOV		BYTE PTR FAGO_RADIO[BX], 15
-	; MOV		BYTE PTR FAGO_JUGADOR[BX], 2
-	; MOV		WORD PTR FAGO_IMAGEN[BX], OFFSET FAGO_2
-	; MOV		WORD PTR FAGO_NVIRUS[BX], 10
+	; ADD		BX, PHAGE_SIZE
+	; MOV		WORD PTR PHAGE_X[BX], 100
+	; MOV		WORD PTR PHAGE_Y[BX], 100
+	; MOV		BYTE PTR PHAGE_RADIUS[BX], 15
+	; MOV		BYTE PTR PHAGE_PLAYER[BX], 2
+	; MOV		WORD PTR PHAGE_IMAGE[BX], OFFSET FAGO_2
+	; MOV		WORD PTR PHAGE_NVIRUS[BX], 10
 	
 	CALL	VIRUS_INICIALIZAR
 	
@@ -128,21 +128,21 @@ INICIALIZAR ENDP
 ; ------------------------------ ;
 ; Salida del programa 
 ; ------------------------------ ;
-SALIR PROC NEAR
+EXIT_GAME PROC NEAR
 	
 	PUSH	0
 	PUSH	0
 	CALL	GOTOXY
 	ADD		SP, 4	
 	
-	CALL	OCULTAR_CURSOR	
+	CALL	HIDE_CURSOR	
 	
 	CALL	CLEAR_SCREEN
 	
     MOV AH, 4CH   		;salida al DOS
 	INT 21H
 	
-SALIR ENDP
+EXIT_GAME ENDP
 
 ; ------------------------------ ;
 ; Punto de entrada del programa. 
@@ -152,7 +152,7 @@ MAIN	PROC FAR
 	FINIT
 	
 	CALL INICIALIZAR
-	CALL JUGAR
+	CALL PLAY_GAME
 	
     MOV AH, 4CH   		;salida al DOS
 	INT 21H

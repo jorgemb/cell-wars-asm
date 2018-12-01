@@ -1,12 +1,12 @@
 ;###########################################;
 ;Universidad del Valle de Guatemala			;
-;Organización de computadoras y Assembler	;
+;Organizaciï¿½n de computadoras y Assembler	;
 ;											;
 ; Biblioteca que contiene las funciones para;
 ; el manejo de mouse 						;
 ;											;
-;Eddy Omar Castro Jáuregui - 11032			;
-;Jorge Luis Martínez Bonilla - 11237		;
+;Eddy Omar Castro Jï¿½uregui - 11032			;
+;Jorge Luis Martï¿½nez Bonilla - 11237		;
 ;###########################################;
 
 ; ---------------------------------------------------;
@@ -28,7 +28,7 @@ INICIAR_MOUSE ENDP
 ; ---------------------------------------------------;
 ; Este procedimiento muestra el cursor
 ; ---------------------------------------------------;
-MOSTRAR_CURSOR PROC NEAR
+SHOW_CURSOR PROC NEAR
 
 	PUSHA
 	
@@ -38,13 +38,13 @@ MOSTRAR_CURSOR PROC NEAR
 	POPA
 	RET
 
-MOSTRAR_CURSOR ENDP
+SHOW_CURSOR ENDP
 
 
 ; ---------------------------------------------------;
 ; Este procedimiento oculta el cursor
 ; ---------------------------------------------------;
-OCULTAR_CURSOR PROC NEAR
+HIDE_CURSOR PROC NEAR
 
 	PUSHA
 	
@@ -54,21 +54,21 @@ OCULTAR_CURSOR PROC NEAR
 	POPA
 	RET
 
-OCULTAR_CURSOR ENDP
+HIDE_CURSOR ENDP
 
 
 ; ---------------------------------------------------;
 ; Este procedimiento obtiene datos del mouse
 ; ---------------------------------------------------;
-DATOS_MOUSE PROC NEAR
+MOUSE_DATA PROC NEAR
 	
 	.DATA
 	POSICIONP_X		DW	0D
 	POSICIONP_Y		DW	0D
-	POSICION_X		DW	0D
-	POSICION_Y		DW	0D
+	X_POSITION		DW	0D
+	Y_POSITION		DW	0D
 	CLICK_DERECHO	DW	0D
-	CLICK_IZQUIERDO	DW	0D
+	LEFT_CLICK	DW	0D
 	
 	.CODE
 
@@ -86,7 +86,7 @@ DATOS_MOUSE PROC NEAR
 	POPA
 	RET
 
-DATOS_MOUSE ENDP
+MOUSE_DATA ENDP
 
 ; --------------------------------------------------------------;
 ; Este procedimiento verifica el estado de los botones del mouse
@@ -97,7 +97,7 @@ VERIFICAR_ESTADO_MOUSE PROC NEAR
 	
 	MOV	DX, BX
 	AND	DX, 00000001B
-	MOV	CLICK_IZQUIERDO, DX
+	MOV	LEFT_CLICK, DX
 	
 	MOV	DX, BX
 	AND	DX, 00000010B
@@ -117,12 +117,12 @@ CONVERTIR_COORDENADAS_MOUSE PROC NEAR
 	SHR	DX, 1
 	SHR	DX, 1
 	SHR	DX, 1
-	MOV	POSICION_Y, DX
+	MOV	Y_POSITION, DX
 	
 	SHR	CX, 1
 	SHR	CX, 1
 	SHR	CX, 1
-	MOV	POSICION_X, CX
+	MOV	X_POSITION, CX
 
 	RET
 

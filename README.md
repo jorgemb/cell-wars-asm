@@ -35,4 +35,17 @@ main.exe
 
 And finally, run main.exe.
 
-Instructions are currently in spanish, however I'll be translating to english in the future.
+
+## Playing the game
+The controls are simple, player 1 uses the keyboard and player 2 uses the mouse. First select the source cell and then select the target cell to send half or more of the viruses to the target.
+
+Player 1
+- Select: # in the keyboard
+- Send: Shift+# in the keyboard
+
+![Player 1 distribution][]
+
+Player 2
+- Select: left click in the cell
+- Send: right click in the target
+

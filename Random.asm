@@ -1,13 +1,13 @@
 ; ------------------------------------------------------- ;
-; Contiene una función para generar números aleatorios.
-; Basado en el código fuente encontrado en:
+; Random number generator.
+; Based on source code found in:
 ; http://www.daniweb.com/software-development/assembly/
 ;	threads/292225/random-number-generating-in-assembly#
 ; ------------------------------------------------------- ;
 
 ; ---------------------------------------- ;
-; Genera un valor al azar entre 0 y 65535
-; @return [AX]: Valor aleatorio
+; Random number between 0 and 65535
+; @return [AX]: Random value
 ; ---------------------------------------- ;
 RANDOM PROC NEAR
 	; Lehmer linear congruential random number generator
@@ -50,12 +50,12 @@ RANDOM PROC NEAR
 RANDOM ENDP
 
 ; -------------------------------------------------------- ;
-; Devuelve un valor aleatorio en el rango dado por [-r, r]
-; @param [WORD]: Rango (r)
-; @return [AX]: Valor aleatorio
+; Returns random value in the range [-r, r]
+; @param [WORD]: Range (r)
+; @return [AX]: Random value
 ; -------------------------------------------------------- ;
-RANDOM_RANGO PROC NEAR
-	; Preparar pila
+RANDOM_RANGE PROC NEAR
+	; Stack preparation
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	CX
@@ -63,24 +63,23 @@ RANDOM_RANGO PROC NEAR
 
 	CALL	RANDOM
 	
-	; Restringe el valor aleatorio entre [0, 2r]
+	; Restrict value to range [0, 2r]
 	MOV		DX, 0
-	MOV		CX, [BP+4]		; Rango
+	MOV		CX, [BP+4]		; Range
 	SHL		CX, 1
 	INC		CX
 	
 	DIV		CX
 	
-	; El valor del residuo (DX) se le resta el rango
-	; para que así sea [-r,r]
-	MOV		CX, [BP+4]		; Rango
+	; Residue is substracted to the range so it becomes [-r, r]
+	MOV		CX, [BP+4]		; Range
 	SUB		DX, CX
 	
 	MOV		AX, DX
 	
-	; Reestablecer pila
+	; Stack restore
 	POP		DX
 	POP		CX
 	POP		BP
 	RET
-RANDOM_RANGO ENDP
+RANDOM_RANGE ENDP

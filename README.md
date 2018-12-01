@@ -43,9 +43,17 @@ Player 1
 - Select: # in the keyboard
 - Send: Shift+# in the keyboard
 
-![Player 1 distribution][]
+![Player 1 distribution][distribution]
 
 Player 2
 - Select: left click in the cell
 - Send: right click in the target
 
+
+This is how the game looks like.
+![Gameplay][gameplay]
+
+
+
+[distribution]: screenshot/distribution.png
+[gameplay]: screenshot/battle.png

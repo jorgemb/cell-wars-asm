@@ -1,25 +1,18 @@
 ;###########################################;
-;Universidad del Valle de Guatemala			;
-;Organización de computadoras y Assembler	;
-;											;
-; Librería para manejo de vectores en dos	;
-; dimensiones, utilizando variables de 		;
-; punto flotante de 32-bits (4 bytes).		;
-;											;
-;Eddy Omar Castro Jáuregui - 11032			;
-;Jorge Luis Martínez Bonilla - 11237		;
+; Library for 32-bit floating point 2D 		;
+; vector math.								;
 ;###########################################;
 
-; Pone en cero el vector dado.
-; @param [WORD]: Dirección del vector
-VECTOR_CERO	PROC NEAR
-	; Inicializa la pila
+; Creates a zero vector.
+; @param [WORD]: Vector address.
+ZERO_VECTOR	PROC NEAR
+	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
 	
-	; Ingresa el valor cero a la pila y luego lo copia
-	; a los dos vectores destino
+	; Pushes zero value to stack and copies it to the
+	; target vector.
 	fldz
 	
 	MOV		BX, [BP+4]
@@ -30,27 +23,26 @@ VECTOR_CERO	PROC NEAR
 	POP		BX
 	POP		BP
 	RET
-VECTOR_CERO ENDP
+ZERO_VECTOR ENDP
 
 
-; Suma dos vectores y los pone en la posición indicada.
-; @param [WORD]: Dirección del primer operando
-; @param [WORD]: Dirección del segundo operando
-; @param [WORD]: Destino de la suma
-VECTOR_SUMAR PROC NEAR
-	; Inicializa la pila
+; Adds two vectors and writes it on the target address.
+; @param [WORD]: First vector address
+; @param [WORD]: Second vector address
+; @param [WORD]: Target vector address
+VECTOR_SUM PROC NEAR
+	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
 	PUSH	SI
 	PUSH	DI
 	
-	; Asigna los operandos a cada registro
-	MOV		BX, [BP+4]	; Primer operando
-	MOV		SI,	[BP+6]	; Segundo operando
-	MOV		DI, [BP+8]	; Resultado
+	MOV		BX, [BP+4]	; First vector
+	MOV		SI,	[BP+6]	; Second vector
+	MOV		DI, [BP+8]	; Result
 	
-	; Realiza la suma de ambos vectores
+	; Sums the values
 	; .. X
 	FLD		DWORD PTR [BX]
 	FADD	DWORD PTR [SI]
@@ -66,27 +58,25 @@ VECTOR_SUMAR PROC NEAR
 	POP		BX
 	POP		BP
 	RET
-VECTOR_SUMAR ENDP
+VECTOR_SUM ENDP
 
 
-; Resta el segundo vector del primero, dando así un
-; vector que va del segundo al primero.
-; @param [WORD]: Dirección del minuendo
-; @param [WORD]: Dirección del sustraendo
-; @param [WORD]: Destino de la resta
-VECTOR_RESTAR PROC NEAR
+; Subtracts the second vector from the first vector. Result
+; saved in target address.
+; @param [WORD]: Minuend address
+; @param [WORD]: Subrahend address
+; @param [WORD]: Target vector address
+VECTOR_SUBTRACT PROC NEAR
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
 	PUSH	SI
 	PUSH	DI
 	
-	; Asigna los operandos a cada registro
-	MOV		BX, [BP+4]	; Minuendo
-	MOV		SI,	[BP+6]	; Sustraendo
-	MOV		DI, [BP+8]	; Resultado
+	MOV		BX, [BP+4]	; Minuend
+	MOV		SI,	[BP+6]	; Subtrahend
+	MOV		DI, [BP+8]	; Difference
 	
-	; Realiza la resta de los vectores
 	; .. X
 	FLD		DWORD PTR [BX]
 	FSUB	DWORD PTR [SI]
@@ -102,21 +92,21 @@ VECTOR_RESTAR PROC NEAR
 	POP		BX
 	POP		BP
 	RET
-VECTOR_RESTAR ENDP
+VECTOR_SUBTRACT ENDP
 
-; Calcula la magnitud del vector dado
-; @param[WORD]: Dirección del vector a calcular
-; ret [ST(0)]: Devuelve la magnitud en la pila
-VECTOR_MAGNITUD	PROC NEAR
-	; Inicializa la pila
+; Returns the magnitude of the provided vector.
+; @param[WORD]: Vector address
+; ret [ST(0)]: Magnitude returned in stack.
+VECTOR_MAGNITUDE	PROC NEAR
+	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
 	
-	; Asigna el operando al registro
+	; Moves vector to registry
 	MOV		BX, [BP+4]
 	
-	; Calcula el cuadrado de los componentes
+	; Squares the components
 	FLD		DWORD PTR [BX]		; x
 	FMUL	DWORD PTR [BX]		; x*x
 	
@@ -129,74 +119,74 @@ VECTOR_MAGNITUD	PROC NEAR
 	POP		BX
 	POP		BP
 	RET
-VECTOR_MAGNITUD ENDP
+VECTOR_MAGNITUDE ENDP
 
-; Calcula el producto escalar de un vector
-; @param [WORD]: Dirección del vector a multiplicar
-; @param [WORD]: Dirección donde se encuentra el escalar [en punto flotante]
-; @param [WORD]: Dirección del vector destino
-VECTOR_ESCALAR PROC NEAR
-	; Inicializa la pila
+; Calculates the scalar multiplication of a vector.
+; @param [WORD]: Vector address
+; @param [WORD]: Scalar address (in floating point)
+; @param [WORD]: Target vector address
+VECTOR_SCALAR PROC NEAR
+	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
 	
-	; Mueve el escalar a la pila y lo multiplica por cada componente
-	MOV		BX, [BP+6]		; Dirección del escalar
+	; Moves scalar to the stack
+	MOV		BX, [BP+6]		; Scalar
 	FLD		DWORD PTR [BX]
 	
 	;.. ST(1) = X, ST(0) = Y
-	MOV		BX, [BP+4]		; Dirección del vector fuente
+	MOV		BX, [BP+4]		; Source vector
 	FLD		DWORD PTR [BX]
 	FLD		DWORD PTR [BX+4]
 	
-	MOV		BX, [BP+8]		; Dirección del vector destino
+	MOV		BX, [BP+8]		; Target vector
 	FMUL	ST, ST(2)
-	FSTP	DWORD PTR [BX+4]			; Guarda la componente Y
+	FSTP	DWORD PTR [BX+4]			; Y component
 
 	FMUL
-	FSTP	DWORD PTR [BX]			; Guarda la componente X
+	FSTP	DWORD PTR [BX]			; X component
 	
 	POP		BX
 	POP		BP
 	RET
-VECTOR_ESCALAR ENDP
+VECTOR_SCALAR ENDP
 
-; Normaliza el vector dado.
-; @param[WORD]: Dirección del vector fuente
-; @param[WORD]: Dirección del vector destino
-VECTOR_NORMALIZAR PROC NEAR
-	; Inicializa la pila
+; Normalizes the given vector.
+; @param[WORD]: Vector address
+; @param[WORD]: Target vector address
+VECTOR_NORMALIZE PROC NEAR
+	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	AX
 	PUSH	BX
 	PUSH	DI
 	
-	; Asigna la dirección de los operandos a los registros
-	MOV		BX, [BP+4]	; Fuente
-	MOV		DI, [BP+6]	; Destino
+	; Saves vector addresses
+	MOV		BX, [BP+4]	; Source
+	MOV		DI, [BP+6]	; Target
 	
-	; Calcula la magnitud del vector
+	; Vector magnitude
 	PUSH	BX
-	CALL	VECTOR_MAGNITUD
+	CALL	VECTOR_MAGNITUDE
 	ADD		SP, 2
 	
-	; .. compara que la magnitud no sea cero
+	; .. checks that the magnitude is not zero
 	FTST
 	FSTSW	AX
 	SAHF
-	JNE		VECTOR_NORMALIZAR_CONTINUAR
+	JNE		VECTOR_NORMALIZE_CONTINUE
 	
-	; Copia los valores al destino
+	; Copies values to target (as it cannot be normalized)
 	FLD		DWORD PTR [BX]
 	FSTP	DWORD PTR [DI]
 	FLD		DWORD PTR [BX+4]
 	FSTP	DWORD PTR [DI+4]
-	JMP		VECTOR_NORMALIZAR_FIN
+	JMP		VECTOR_NORMALIZE_END
 	
-	VECTOR_NORMALIZAR_CONTINUAR:
-	; Divide cada uno de los componentes entre la magnitud
+	VECTOR_NORMALIZE_CONTINUE:
+	; Divides each component by the magnitude
 	; ..X
 	FLD		DWORD PTR [BX]
 	FDIV	ST, ST(1)		; x / |vector|
@@ -204,36 +194,34 @@ VECTOR_NORMALIZAR PROC NEAR
 	
 	; ..Y
 	FLD		DWORD PTR [BX+4]
-	FXCH					; Esta operación se hace para que la siguiente elimine la magnitud
-							; de la pila.
+	FXCH					; Eliminates value from the stack
 	FDIVP	ST(1), ST		; y / |vector|
 	FSTP	DWORD PTR [DI+4]
 	
-	VECTOR_NORMALIZAR_FIN:
+	VECTOR_NORMALIZE_END:
 	
 	POP		DI
 	POP 	BX
 	POP		AX
 	POP		BP
 	RET
-VECTOR_NORMALIZAR ENDP
+VECTOR_NORMALIZE ENDP
 
-; Calcula el producto punto de dos vectores
-; @param [WORD]: Dirección al primer vector
-; @param [WORD]: Dirección al segundo vector
-; @return [ST]: Valor del producto punto
-VECTOR_PUNTO PROC NEAR
-	; Preparar pila
+; Calculates the dot product of two vectors
+; @param [WORD]: First vector address
+; @param [WORD]: Second vector address
+; @return [ST]: Target vector
+VECTOR_DOT PROC NEAR
+	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
 	PUSH	SI
 	
-	; Asigna la dirección de los operandos
-	MOV		BX, [BP+4]	; Primer vector
-	MOV		SI, [BP+6]	; Segundo vector
+	MOV		BX, [BP+4]	; First vector
+	MOV		SI, [BP+6]	; Second vector
 	
-	; Calcula el producto de cada uno de los componentes y los suma
+	; Calculates product of each component
 	FLD		DWORD PTR [BX]
 	FLD		DWORD PTR [SI]
 	FMUL					; V1x*V2x
@@ -248,4 +236,4 @@ VECTOR_PUNTO PROC NEAR
 	POP		BX
 	POP		BP
 	RET
-VECTOR_PUNTO ENDP
+VECTOR_DOT ENDP

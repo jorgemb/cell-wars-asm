@@ -86,14 +86,14 @@ INCLUDE random.asm
 INCLUDE	/IO/mouse_m.asm
 INCLUDE	/IO/console.asm
 INCLUDE	/IO/IO.asm
-INCLUDE /IO/Mouse.asm
+INCLUDE /IO/mouse.asm
 
-INCLUDE Vector.asm
+INCLUDE vector.asm
 
-INCLUDE /Juego/Fagos.asm
-INCLUDE /Juego/Virus.asm
-INCLUDE /Juego/Graficos.asm
-INCLUDE /Juego/Juego.asm
+INCLUDE /game/Fagos.asm
+INCLUDE /game/Virus.asm
+INCLUDE /game/Graficos.asm
+INCLUDE /game/Juego.asm
 
 ; ------------------------------ ;
 ; Program exit

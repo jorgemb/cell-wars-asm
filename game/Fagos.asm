@@ -1,151 +1,135 @@
 ;###########################################;
-;Universidad del Valle de Guatemala			;
-;Organizaci�n de Computadoras y Assembler	;
-;											;
-; Contiene toda la l�gica para simular los	;
-; PHAGES en pantalla, adem�s de la definici�n;
-; del nivel principal.						;
-;											;
-;Eddy Omar Castro J�uregui - 11032			;
-;Jorge Luis Mart�nez Bonilla - 11237		;
+; Logic for phage simulation, plus first 	;
+; level definition.							;
 ;###########################################;
 
 .DATA
-	; Definici�n de los PHAGES en el nivel
-	; La estructura de los PHAGES es de la siguiente manera
+	; PHAGE definition.
 	;	- byte	PosX
 	;	- byte	PosY
-	;	- byte	Radio
-	;	- byte	Jugador Due�o (FF = Neutro, 00 � 01 = Jugador1, 02 � 03 = Jugador2)
-	;	- word	Imagen
-	;	- word	Cantidad de Virus
-	; TOTAL: 8 bytes por fago
+	;	- byte	Radius
+	;	- byte	Owner (FF = Neutral, 00 or 01 = Jugador1, 02 or 03 = Jugador2)
+	;	- word	Image
+	;	- word	Virus quantity
+	; TOTAL: 8 bytes per phage
 	
-	; EJEMPLO:
-	; 	FAGO	DW	000, 000		; PosX,PosY
-	;			DB	00, 0FFH	; Radio, Jugador
-	;			DW	0000		; Imagen
-	;			DW	0000		; Virus iniciales
+	; All phage are initialized as default
+	; INITIAL_PHAGE		DQ		PHAGE_QUANTITY DUP ( 00000000FF000000H )
 	
-	; Inicializa todos en default
-	; FAGOS_INICIAL		DQ		PHAGE_QUANTITY DUP ( 00000000FF000000H )
-	
-	FAGOS_INICIAL	DW	290, 170	; POSX,POSY
-					DB	25, 02		; Radio, Jugador
-					DW	OFFSET FAGO_1		; Imagen
-					DW	0010		; Virus iniciales
+	PHAGES_INITIAL_DATA	DW	290, 170	; POSX,POSY
+					DB	25, 02		; Radius, Owner
+					DW	OFFSET FAGO_1		; Image
+					DW	0010		; Initial virus amount
 					
-					; Fago 1
+					; Phage 1
 					DW	030, 030	; PosX,PosY
-					DB	25, 00		; Radio, Jugador
-					DW	OFFSET FAGO_1		; Imagen
-					DW	0010		; Virus iniciales
+					DB	25, 00		; Radius, Owner
+					DW	OFFSET FAGO_1		; Image
+					DW	0010		; Initial virus amount
 					
-					; Fago 2
+					; Phage 2
 					DW	030, 93		; PosX,PosY
-					DB	15, 0FFH	; Radio, Jugador
-					DW	OFFSET FAGO_2		; Imagen
-					DW	0020		; Virus iniciales
+					DB	15, 0FFH	; Radius, Owner
+					DW	OFFSET FAGO_2		; Image
+					DW	0020		; Initial virus amount
 					
-					; Fago 3
+					; Phage 3
 					DW	160, 20		; PosX,PosY
-					DB	10, 0FFH	; Radio, Jugador
-					DW	OFFSET FAGO_3		; Imagen
-					DW	0010		; Virus iniciales
+					DB	10, 0FFH	; Radius, Owner
+					DW	OFFSET FAGO_3		; Image
+					DW	0010		; Initial virus amount
 					
-					; Fago 4
+					; Phage 4
 					DW	128, 060	; PosX,PosY
-					DB	10, 0FFH	; Radio, Jugador
-					DW	OFFSET FAGO_3		; Imagen
-					DW	0010		; Virus iniciales
+					DB	10, 0FFH	; Radius, Owner
+					DW	OFFSET FAGO_3		; Image
+					DW	0010		; Initial virus amount
 					
-					; Fago 5
+					; Phage 5
 					DW	120, 140	; PosX,PosY
-					DB	10, 0FFH	; Radio, Jugador
-					DW	OFFSET FAGO_3	; Imagen
-					DW	0010		; Virus iniciales
+					DB	10, 0FFH	; Radius, Owner
+					DW	OFFSET FAGO_3	; Image
+					DW	0010		; Initial virus amount
 					
-					; Fago 6
+					; Phage 6
 					DW	200, 140		; PosX,PosY
-					DB	10, 0FFH	; Radio, Jugador
-					DW	OFFSET FAGO_3	; Imagen
-					DW	0010		; Virus iniciales
+					DB	10, 0FFH	; Radius, Owner
+					DW	OFFSET FAGO_3	; Image
+					DW	0010		; Initial virus amount
 					
-					; Fago 7
+					; Phage 7
 					DW	192, 060		; PosX,PosY
-					DB	10, 0FFH	; Radio, Jugador
-					DW	OFFSET FAGO_3	; Imagen
-					DW	0010		; Virus iniciales
+					DB	10, 0FFH	; Radius, Owner
+					DW	OFFSET FAGO_3	; Image
+					DW	0010		; Initial virus amount
 					
-					; Fago 8
+					; Phage 8
 					DW	160, 100		; PosX,PosY
-					DB	15, 0FFH	; Radio, Jugador
-					DW	OFFSET FAGO_2	; Imagen
-					DW	0050		; Virus iniciales
+					DB	15, 0FFH	; Radius, Owner
+					DW	OFFSET FAGO_2	; Image
+					DW	0050		; Initial virus amount
 					
-					; Fago 9
+					; Phage 9
 					DW	290, 107		; PosX,PosY
-					DB	15, 0FFH	; Radio, Jugador
-					DW	OFFSET FAGO_2	; Imagen
-					DW	0020		; Virus iniciales
+					DB	15, 0FFH	; Radius, Owner
+					DW	OFFSET FAGO_2	; Image
+					DW	0020		; Initial virus amount
 
 .CODE
 ; --------------------------------------------------- ;
-; Inicializa los PHAGES con sus datos predeterminados.
+; Initializes phage data.
 ; --------------------------------------------------- ;
-FAGOS_INICIALIZAR PROC NEAR
+PHAGES_INITIALIZE PROC NEAR
 	PUSHA
 	
-	; Copia los datos iniciales al vector de PHAGES
-	MOV		SI, OFFSET FAGOS_INICIAL
+	; Copies phages initial vectors
+	MOV		SI, OFFSET PHAGES_INITIAL_DATA
 	MOV		DI, OFFSET PHAGES
 	
 	MOV		CX, PHAGE_TOTAL_BYTES
-	FAGOS_INICIALIZAR_CICLO:
+	PHAGES_INITIALIZE_CYCLE:
 		MOV	AL, BYTE PTR [SI]
 		MOV BYTE PTR [DI], AL
 		INC SI
 		INC DI
-		LOOP FAGOS_INICIALIZAR_CICLO
+		LOOP PHAGES_INITIALIZE_CYCLE
 	
 	POPA
 	RET
-FAGOS_INICIALIZAR ENDP
+PHAGES_INITIALIZE ENDP
 
-; Devuelve la direcci�n de un fago dado su ID, el ID
-; deve de estar en un registro o en memoria (y no puede ser AX)
-; Devuelve la direcci�n en BX.
-FAGO_DIRECCION MACRO ID_FAGO
-	; Guarda los registros
+; Returns the address of a phage given its ID.
+; Address must be in a register, cannot be AX.
+; Returns address in BX.
+PHAGE_ADDRESS MACRO PHAGE_ID
+	; Saves registers
 	PUSH	AX
 	PUSH	DX
 
 	MOV		AX, PHAGE_SIZE
-	MUL		BYTE PTR ID_FAGO
+	MUL		BYTE PTR PHAGE_ID
 	
 	LEA		BX, PHAGES
 	ADD		BX, AX
 	
-	; Reestablece los registros
+	; Restores registers
 	POP		DX
 	POP		AX
 ENDM
 
-; Obtiene la direcci�n de un virus al fago dado. El vector es guardado
-; en las posici�n de memoria FP1 y FP2.
-; @param [WORD]: Direcci�n en memoria del virus
-; @param [WORD]: Direcci�n en memoria del fago
-; @param [WORD]: Booleano, 1 si se quiere la direcci�n normalizada,
-; 0 si se quiere con magnitud
-; [Pierde los valores de FP1 y FP2]
-VIRUS_VECTOR_FAGO PROC NEAR
-	; Preparar la pila
+; Calculates the direction from the given virus to the given phage.
+; Vector is saved in memory position FP1 and FP2.
+; @param [WORD]: Virus address
+; @param [WORD]: Phage address
+; @param [WORD]: Boolean, 1 returns normalized address and 0 unnormalized.
+VIRUS_PHAGE_VECTOR PROC NEAR
+	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSHA
 	
-	; Guarda la posici�n del fago en memoria y lo convierte a punto flotante
-	MOV		BX, [BP+6]		; Direcci�n en memoria del fago
+	; Phage position is converted to floating point.
+	MOV		BX, [BP+6]		; Phage address
 	
 	MOV		AX, WORD PTR PHAGE_X[BX]		; ..X
 	MOV		WORD PTR FP1, AX
@@ -157,47 +141,40 @@ VIRUS_VECTOR_FAGO PROC NEAR
 	FILD	WORD PTR FP2
 	FSTP	DWORD PTR FP2
 	
-	; Obtener la direcci�n del virus al fago
-	MOV		SI, [BP+4]		; Direcci�n en memoria del virus
+	; Calculates virus vector
+	MOV		SI, [BP+4]		; Virus address
+	ADD		SI, VIRUS_X		; SI has X position
 	
-	; Prueba (empuja la direcci�n del virus a la pila)
-	; FLD		DWORD PTR VIRUS_X[SI]
-	; FLD		DWORD PTR VIRUS_Y[SI]
-	ADD		SI, VIRUS_X		; SI apunta ahora a la Posici�n X
-	
-	PUSH	OFFSET FP1					; Destino
-	PUSH	SI							; Sustraendo
-	PUSH	OFFSET FP1					; Minuendo
-	CALL	VECTOR_RESTAR
+	PUSH	OFFSET FP1					; Target
+	PUSH	SI							; Subtrahend
+	PUSH	OFFSET FP1					; Minuend
+	CALL	VECTOR_SUBTRACT
 	ADD		SP, 6
 	
-	CMP		WORD PTR [BP+8], 01		; Comprobar si se quiere normalizar
-	JNE		VIRUS_VECTOR_FAGO_FIN
+	CMP		WORD PTR [BP+8], 01		; Check if normalization is required
+	JNE		VIRUS_PHAGE_VECTOR_END
 	
-	; Normaliza el vector
-	PUSH	OFFSET FP1					; Destino
-	PUSH	OFFSET FP1					; Fuente
-	CALL	VECTOR_NORMALIZAR
+	; Normalizes the direction
+	PUSH	OFFSET FP1					; Target
+	PUSH	OFFSET FP1					; Source
+	CALL	VECTOR_NORMALIZE
 	ADD		SP, 4
 	
-	; Reestablecer la pila
-	VIRUS_VECTOR_FAGO_FIN:
+	; Stack restore
+	VIRUS_PHAGE_VECTOR_END:
 	POPA
 	POP		BP
 	RET
-VIRUS_VECTOR_FAGO ENDP
+VIRUS_PHAGE_VECTOR ENDP
 
+; Verifies if there has been a collision with a phage. If collision is with
+; other phage, AH = 01 and AL = PHAGE ID; if is with target phage, AL = FF. 
+; Collisions are not reported if is with source phage.
+; @param [WORD]: Virus address
+; @return [AX]: Collision 
 ; ------------------------------------------------------------------------- ;
-; Verifica si hubo una colisi�n con alg�n fago. Si el virus
-; colisiona con otro virus regresa en AH = 01. Si colisiona con
-; el virus destion entonces AL = FF, si colisiona con otro entonces
-; en AL se guarda el ID del fago.
-; El virus no reporta colisiones cuando esta se realiza con su fago fuente.
-; @param [WORD]: Direcci�n del virus a verificar
-; @return [AX]: Valores de colisi�n (ver descripci�n).
-; ------------------------------------------------------------------------- ;
-VIRUS_COLISION_FAGO PROC NEAR
-	; Preparar pila
+VIRUS_PHAGE_COLLISION PROC NEAR
+	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
@@ -205,77 +182,75 @@ VIRUS_COLISION_FAGO PROC NEAR
 	PUSH	DX
 	PUSH	SI
 	
-	; Inicializa los registros
+	; Initializes the registers
 	MOV		AX, 0
-	MOV		BX, [BP+4]		; ID del virus
+	MOV		BX, [BP+4]		; Virus ID
 	MOV		SI, BX
 	
-	; Revisa colisiones con cada fago
+	; Check collisions with each phage
 	MOV		CX, PHAGE_QUANTITY
-	VIRUS_COLISION_FAGO_CICLO:
-		; Revisa que el fago no sea el fago fuente
+	VIRUS_PHAGE_COLLISION_CYCLE:
+		; Check if phage is source phage
 		MOV		DX, CX
 		DEC		DX
 		
 		CMP		DL, VIRUS_SOURCE[SI]
-		JE		VIRUS_COLISION_FAGO_FINCICLO
+		JE		VIRUS_PHAGE_COLLISION_ENDCYCLE
 
-		; Obtiene la direcci�n del virus al fago y la distancia entre ellos
+		; Calculates virus-phage direction and distance.
 		MOV		SI, [BP+4]
-		FAGO_DIRECCION DX	; La direcci�n del fago est� en BX
+		PHAGE_ADDRESS DX	; Phage direction is in BX
 		
-		PUSH	00			; Vector sin normalizar
-		PUSH	BX			; Direcci�n del fago
-		PUSH	SI			; Direcci�n del virus
-		CALL 	VIRUS_VECTOR_FAGO
+		PUSH	00			; Unnormalized vector
+		PUSH	BX			; Phage address
+		PUSH	SI			; Virus address
+		CALL 	VIRUS_PHAGE_VECTOR
 		ADD		SP, 6
 		
-		PUSH	OFFSET FP1	; Vector fuente
-		CALL	VECTOR_MAGNITUD
+		PUSH	OFFSET FP1	; Source vector
+		CALL	VECTOR_MAGNITUDE
 		ADD		SP, 2
 		
-		; Compara el radio con la magnitud del vector
+		; Compares radius with distance
 		MOVSX	AX, BYTE PTR PHAGE_RADIUS[BX]
 		MOV		WORD PTR FP1, AX
-		FICOMP	WORD PTR FP1			; CMP Distancia con Radio
-		; FILD	WORD PTR FP1
-		; FCOMPP						; COMP Radio con Distancia
+		FICOMP	WORD PTR FP1			; CMP Distance with radiuse
 		
 		FSTSW	AX
 		SAHF
-		JAE		VIRUS_COLISION_FAGO_FINCICLO
+		JAE		VIRUS_PHAGE_COLLISION_ENDCYCLE
 		
-		; .. hay colisi�n
+		; There is collision!
 		MOV		AH, 1
 		
-		; .. revisa si la colisi�n es con el destino
+		; .. check if collision is with target
 		CMP		DL, VIRUS_PHAGE[SI]
-		JE		COLISION_DESTINO
+		JE		COLLISION_TARGET
 		
 		MOV		AL, VIRUS_PHAGE[SI]
-		JMP		VIRUS_COLISION_FAGO_FIN
+		JMP		VIRUS_PHAGE_COLLISION_END
 	
-		COLISION_DESTINO:
+		COLLISION_TARGET:
 		MOV		AL, 0FFH
-		JMP		VIRUS_COLISION_FAGO_FIN
+		JMP		VIRUS_PHAGE_COLLISION_END
 	
-		VIRUS_COLISION_FAGO_FINCICLO:
+		VIRUS_PHAGE_COLLISION_ENDCYCLE:
 		MOV		AX, 0
 		
 		DEC		CX
-		JZ		VIRUS_COLISION_FAGO_FIN
-		JMP		VIRUS_COLISION_FAGO_CICLO
+		JZ		VIRUS_PHAGE_COLLISION_END
+		JMP		VIRUS_PHAGE_COLLISION_CYCLE
 	
-	VIRUS_COLISION_FAGO_FIN:
+	VIRUS_PHAGE_COLLISION_END:
 	
-	; Regresa la pila a su estado inicial
+	; Restore
 	POP		SI
 	POP		DX
 	POP		CX
 	POP		BX
 	POP		BP
 	RET
-VIRUS_COLISION_FAGO ENDP
+VIRUS_PHAGE_COLLISION ENDP
 
 ; ------------------------------------------------------------------------- ;
 ; Verifica si hubo una colisi�n con alg�n fago. Si el virus
@@ -287,7 +262,7 @@ VIRUS_COLISION_FAGO ENDP
 ; @return [AX]: Valores de colisi�n (ver descripci�n).
 ; ------------------------------------------------------------------------- ;
 VIRUS_COLISION_FAGO_MOUSE PROC NEAR
-	; Preparar pila
+	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
@@ -312,16 +287,16 @@ VIRUS_COLISION_FAGO_MOUSE PROC NEAR
 
 		; Obtiene la direcci�n del virus al fago y la distancia entre ellos
 		MOV		SI, [BP+4]
-		FAGO_DIRECCION DX	; La direcci�n del fago est� en BX
+		PHAGE_ADDRESS DX	; La direcci�n del fago est� en BX
 		
 		PUSH	00			; Vector sin normalizar
 		PUSH	BX			; Direcci�n del fago
 		PUSH	SI			; Direcci�n del virus
-		CALL 	VIRUS_VECTOR_FAGO
+		CALL 	VIRUS_PHAGE_VECTOR
 		ADD		SP, 6
 		
 		PUSH	OFFSET FP1	; Vector fuente
-		CALL	VECTOR_MAGNITUD
+		CALL	VECTOR_MAGNITUDE
 		ADD		SP, 2
 		
 		; Compara el radio con la magnitud del vector
@@ -383,7 +358,7 @@ FAGOS_MOVILIZAR_VIRUS PROC NEAR
 
 	; Obtiene la direcci�n del fago 
 	MOV		DX, [BP+4]		; ID del fago fuente
-	FAGO_DIRECCION DX		; Direcci�n en BX
+	PHAGE_ADDRESS DX		; Direcci�n en BX
 	MOV		SI, BX
 	
 	; Obtiene la mitad de los PHAGES del fuente y los activa
@@ -425,7 +400,7 @@ FAGOS_ACTUALIZAR PROC NEAR
 	FAGOS_ACTUALIZAR_CICLO:
 		MOV		DX, CX
 		DEC		DX			; ID del fago actual
-		FAGO_DIRECCION DX	; La direcci�n del fago se guarda en BX
+		PHAGE_ADDRESS DX	; La direcci�n del fago se guarda en BX
 		
 		; Revisa que el fago pertenezca a un jugador
 		CMP		BYTE PTR PHAGE_PLAYER[BX], 0FFH
@@ -461,7 +436,7 @@ FAGOS_ACTUALIZAR ENDP
 ; 		( FF0 si ning�n fago est� seleccionado)
 ; ------------------------------------------------------------ ;
 FAGO_OBTENER_SELECCIONADO PROC NEAR
-	; Preparar pila
+	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSH	BX
@@ -478,7 +453,7 @@ FAGO_OBTENER_SELECCIONADO PROC NEAR
 		DEC		DX			; Correcci�n de posici�n
 		
 		; Obtener la direcci�n del fago
-		FAGO_DIRECCION DX	; Direcci�n en BX
+		PHAGE_ADDRESS DX	; Direcci�n en BX
 		
 		; Verificar si el fago pertenece al jugador
 		MOVZX		DX, BYTE PTR PHAGE_PLAYER[BX]
@@ -518,7 +493,7 @@ FAGO_OBTENER_SELECCIONADO ENDP
 ; @param [WORD]: ID del fago a seleccionar
 ; --------------------------------------------------------------- ;
 FAGO_SELECCIONAR PROC NEAR
-	; Inicializa la pila
+	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSHA
@@ -533,7 +508,7 @@ FAGO_SELECCIONAR PROC NEAR
 	SHL		AX, 1			; Corrige el ID del jugador (J1 = 0, J2 = 2)
 	
 	MOV		DX, [BP+6]		; ID del fago
-	FAGO_DIRECCION DX		; Direccion en BX
+	PHAGE_ADDRESS DX		; Direccion en BX
 	
 	CMP		AL, BYTE PTR PHAGE_PLAYER[BX]
 	JNE		FAGO_SELECCIONAR_FIN
@@ -569,7 +544,7 @@ FAGO_DESELECCIONAR PROC NEAR
 		DEC		DX			; Correcci�n de posici�n
 		
 		; Obtiene la direcci�n del fago y el jugador del mismo
-		FAGO_DIRECCION DX	; Direccion en BX
+		PHAGE_ADDRESS DX	; Direccion en BX
 		
 		MOVZX	DX, BYTE PTR PHAGE_PLAYER[BX]
 		SHR		DX, 1

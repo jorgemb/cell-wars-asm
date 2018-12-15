@@ -72,7 +72,7 @@ VIRUS_ACTIVAR_UNICO PROC NEAR
 
 	; Obtener la direcci�n del fago fuente y del virus
 	MOV		DX, [BP+6]		; ID fago fuente
-	FAGO_DIRECCION DX		; Direcci�n en BX
+	PHAGE_ADDRESS DX		; Direcci�n en BX
 	MOV		SI, BX
 	
 	MOV		BX, [BP+4]		; Direcci�n del Virus
@@ -202,7 +202,7 @@ VIRUS_ACTIVAR ENDP
 ; @param [WORD]: Direcci�n del virus a mover
 ; @param [WORD]: ID del fago que se desea bordear
 VIRUS_MOVER_TANGENTE PROC NEAR
-	; Preparar pila
+	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSHA
@@ -210,12 +210,12 @@ VIRUS_MOVER_TANGENTE PROC NEAR
 	; Se obtiene el vector direcci�n del virus al fago dado
 	MOV		SI, [BP+4]		; Direcci�n en memoria del Virus
 	MOV		DL, [BP+6]		; ID del fago
-	FAGO_DIRECCION DL		; Direcci�n en memoria del Fago (en BX)
+	PHAGE_ADDRESS DL		; Direcci�n en memoria del Fago (en BX)
 	
 	PUSH	01			; Vector normalizado
 	PUSH	BX			; Direcci�n fago
 	PUSH	SI			; Direcci�n virus
-	CALL VIRUS_VECTOR_FAGO
+	CALL VIRUS_PHAGE_VECTOR
 	ADD		SP, 6
 	
 	; Se empujan los componentes a la pila y se dividen Vx/Vy
@@ -247,7 +247,7 @@ VIRUS_MOVER_TANGENTE PROC NEAR
 	; Ahora se normaliza y se avanza al virus en esa direcci�n
 	PUSH	OFFSET FP1			; Destino
 	PUSH	OFFSET FP1			; Fuente
-	CALL	VECTOR_NORMALIZAR
+	CALL	VECTOR_NORMALIZE
 	ADD		SP, 4
 	
 	; .. multiplicar por la velocidad
@@ -259,7 +259,7 @@ VIRUS_MOVER_TANGENTE PROC NEAR
 	PUSH	OFFSET FP1				; Destino
 	PUSH	OFFSET FP3				; Escalar
 	PUSH	OFFSET FP1				; Fuente
-	CALL	VECTOR_ESCALAR
+	CALL	VECTOR_SCALAR
 	ADD		SP, 6
 	
 	MOV		DI, SI
@@ -268,7 +268,7 @@ VIRUS_MOVER_TANGENTE PROC NEAR
 	PUSH	DI					; Destino
 	PUSH	OFFSET FP1			; Operando
 	PUSH	DI					; Operando
-	CALL	VECTOR_SUMAR
+	CALL	VECTOR_SUM
 	ADD		SP, 6
 	
 	; Reestablecer pila
@@ -283,7 +283,7 @@ VIRUS_MOVER_TANGENTE ENDP
 ; destino.
 ; @param [WORD]: Direcci�n del virus a resolver
 VIRUS_EVOLUCION_COLISION_FAGO PROC NEAR
-	; Preparar pila
+	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSHA
@@ -295,12 +295,12 @@ VIRUS_EVOLUCION_COLISION_FAGO PROC NEAR
 	
 	; Se obtiene el ID del jugador del fago fuente y destino
 	; ..fuente
-	FAGO_DIRECCION SI		; Direcci�n en BX
+	PHAGE_ADDRESS SI		; Direcci�n en BX
 	MOV		SI, BX
 	MOVZX	AX, BYTE PTR PHAGE_PLAYER[SI]
 	
 	; ..destino
-	FAGO_DIRECCION DI		; Direcci�n en BX
+	PHAGE_ADDRESS DI		; Direcci�n en BX
 	MOV		DI, BX
 	MOVZX	DX, BYTE PTR PHAGE_PLAYER[DI]
 	
@@ -349,19 +349,19 @@ VIRUS_MOVER PROC NEAR
 	VECTOR_MOVIMIENTO	DQ	?	
 
 	.CODE
-	; Preparar pila
+	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSHA
 	
 	; Obtener la direcci�n del fago al virus (Se posiciona en FP1 y FP2)
 	MOV		SI, [BP+4]					; Dir virus
-	FAGO_DIRECCION VIRUS_PHAGE[SI]		; Dir fago en BX
+	PHAGE_ADDRESS VIRUS_PHAGE[SI]		; Dir fago en BX
 	
 	PUSH	01			; Vector normalizado
 	PUSH	BX			; Direcci�n del fago
 	PUSH	SI			; Direcci�n del virus
-	CALL	VIRUS_VECTOR_FAGO
+	CALL	VIRUS_PHAGE_VECTOR
 	ADD		SP, 6
 	
 	; Obtener el escalar de velocidad
@@ -373,7 +373,7 @@ VIRUS_MOVER PROC NEAR
 	PUSH	OFFSET VECTOR_MOVIMIENTO		; Destino
 	PUSH	OFFSET FP3						; Escalar
 	PUSH	OFFSET FP1						; Fuente
-	CALL	VECTOR_ESCALAR
+	CALL	VECTOR_SCALAR
 	ADD		SP, 6
 	
 	; Sumar la direcci�n al vector posicion del virus
@@ -383,13 +383,13 @@ VIRUS_MOVER PROC NEAR
 	PUSH	DI								; Destino
 	PUSH	OFFSET VECTOR_MOVIMIENTO		; Operando
 	PUSH	DI								; Operando
-	CALL	VECTOR_SUMAR
+	CALL	VECTOR_SUM
 	ADD		SP, 6
 	
 	; Revisar colisiones
 	MOV		SI, [BP+4]		; Direcci�n del virus a mover
 	PUSH	SI
-	CALL	VIRUS_COLISION_FAGO
+	CALL	VIRUS_PHAGE_COLLISION
 	ADD		SP, 2
 	
 	CMP		AH, 0
@@ -410,7 +410,7 @@ VIRUS_MOVER PROC NEAR
 	PUSH	DI							; Destino (VIRUS_POSICION)
 	PUSH	OFFSET VECTOR_MOVIMIENTO	; Sustraendo
 	PUSH	DI							; Minuendo
-	CALL	VECTOR_RESTAR
+	CALL	VECTOR_SUBTRACT
 	ADD		SP, 6
 	
 	PUSH	AX				; ID del fago a bordear

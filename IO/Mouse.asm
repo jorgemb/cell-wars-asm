@@ -1,18 +1,11 @@
 ;###########################################;
-;Universidad del Valle de Guatemala			;
-;Organizaci�n de computadoras y Assembler	;
-;											;
-; Biblioteca que contiene las funciones para;
-; el manejo de mouse 						;
-;											;
-;Eddy Omar Castro J�uregui - 11032			;
-;Jorge Luis Mart�nez Bonilla - 11237		;
+; Mouse utilities. 							;
 ;###########################################;
 
 ; ---------------------------------------------------;
-; Este procedimiento inicializa el mouse
+; Mouse initialization
 ; ---------------------------------------------------;
-INICIAR_MOUSE PROC NEAR
+MOUSE_INIT PROC NEAR
 
 	PUSHA
 	
@@ -22,11 +15,11 @@ INICIAR_MOUSE PROC NEAR
 	POPA
 	RET
 
-INICIAR_MOUSE ENDP
+MOUSE_INIT ENDP
 
 
 ; ---------------------------------------------------;
-; Este procedimiento muestra el cursor
+; Shows the cursor on the screen
 ; ---------------------------------------------------;
 SHOW_CURSOR PROC NEAR
 
@@ -42,7 +35,7 @@ SHOW_CURSOR ENDP
 
 
 ; ---------------------------------------------------;
-; Este procedimiento oculta el cursor
+; Hides the cursor
 ; ---------------------------------------------------;
 HIDE_CURSOR PROC NEAR
 
@@ -58,17 +51,17 @@ HIDE_CURSOR ENDP
 
 
 ; ---------------------------------------------------;
-; Este procedimiento obtiene datos del mouse
+; Returns mouse data like position and click status.
 ; ---------------------------------------------------;
 MOUSE_DATA PROC NEAR
 	
 	.DATA
-	POSICIONP_X		DW	0D
-	POSICIONP_Y		DW	0D
-	X_POSITION		DW	0D
-	Y_POSITION		DW	0D
-	CLICK_DERECHO	DW	0D
-	LEFT_CLICK	DW	0D
+	PIXELPOS_X		DW	0D
+	PIXELPOS_Y		DW	0D
+	POSITION_X		DW	0D
+	POSITION_Y		DW	0D
+	RIGHT_CLICK		DW	0D
+	LEFT_CLICK		DW	0D
 	
 	.CODE
 
@@ -76,12 +69,13 @@ MOUSE_DATA PROC NEAR
 	
 	MOV	AX, 3
 	INT 33H
-	; almacenar valores de coordenadas en pixeles
-	MOV	POSICIONP_X, CX
-	MOV	POSICIONP_Y, DX
+
+	; Saves pixel coordinates
+	MOV	PIXELPOS_X, CX
+	MOV	PIXELPOS_Y, DX
 	
-	CALL	VERIFICAR_ESTADO_MOUSE
-	CALL	CONVERTIR_COORDENADAS_MOUSE
+	CALL	CHECK_MOUSE_STATUS
+	CALL	CONVERT_MOUSE_COORDINATES
 	
 	POPA
 	RET
@@ -89,9 +83,9 @@ MOUSE_DATA PROC NEAR
 MOUSE_DATA ENDP
 
 ; --------------------------------------------------------------;
-; Este procedimiento verifica el estado de los botones del mouse
+; Verifies mouse buttons status.
 ; --------------------------------------------------------------;
-VERIFICAR_ESTADO_MOUSE PROC NEAR
+CHECK_MOUSE_STATUS PROC NEAR
 
 	PUSHA
 	
@@ -102,28 +96,28 @@ VERIFICAR_ESTADO_MOUSE PROC NEAR
 	MOV	DX, BX
 	AND	DX, 00000010B
 	SHR	DX, 1
-	MOV	CLICK_DERECHO, DX
+	MOV	RIGHT_CLICK, DX
 	
 	POPA
 	RET
 
-VERIFICAR_ESTADO_MOUSE ENDP
+CHECK_MOUSE_STATUS ENDP
 
 ; ---------------------------------------------------;
-; Este procedimiento convierte las coodenadas a 80x25
+; Converts mouse coordinates to a 80x25 resolution.
 ; ---------------------------------------------------;
-CONVERTIR_COORDENADAS_MOUSE PROC NEAR
+CONVERT_MOUSE_COORDINATES PROC NEAR
 
 	SHR	DX, 1
 	SHR	DX, 1
 	SHR	DX, 1
-	MOV	Y_POSITION, DX
+	MOV	POSITION_Y, DX
 	
 	SHR	CX, 1
 	SHR	CX, 1
 	SHR	CX, 1
-	MOV	X_POSITION, CX
+	MOV	POSITION_X, CX
 
 	RET
 
-CONVERTIR_COORDENADAS_MOUSE ENDP
+CONVERT_MOUSE_COORDINATES ENDP

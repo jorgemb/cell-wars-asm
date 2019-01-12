@@ -90,9 +90,9 @@ INCLUDE /IO/mouse.asm
 
 INCLUDE vector.asm
 
-INCLUDE /game/Fagos.asm
+INCLUDE /game/phages.asm
 INCLUDE /game/Virus.asm
-INCLUDE /game/Graficos.asm
+INCLUDE /game/graphics.asm
 INCLUDE /game/Juego.asm
 
 ; ------------------------------ ;

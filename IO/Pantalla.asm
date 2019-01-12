@@ -1,24 +1,17 @@
 ;###########################################;
-;Universidad del Valle de Guatemala			;
-;Organizaci�n de Computadoras y Assembler	;
-;											;
-; Librer�a con varias utilidades para		;
-; trabajar con los modos gr�ficos.			;
-;											;
-;Eddy Omar Castro J�uregui - 11032			;
-;Jorge Luis Mart�nez Bonilla - 11237		;
+; Library with utilities for graphic mode	;
+; work.										;
 ;###########################################;
 
-; ----------------------------------------------------------- ;
-; Dibuja una linea del punto1 al punto2 (dado). Basado en el
-; algoritmo Bresenham para dibujar l�neas.
-; [WORD]: Posicion x0
-; [WORD]: Posicion y0
-; [WORD]: Posicion x1
-; [WORD]: Posicion y1
-; [WORD]: Atributo a color (BYTE)
-; [WORD]: Offset de memoria para la pagina.
-; [WORD]: Ancho de la pantalla del modo actual.
+; Draws a line from point 1 to point 2. Based on Bresenham 
+; algorithm for line drawing.
+; [WORD]: x0 
+; [WORD]: y0 
+; [WORD]: x1
+; [WORD]: y1
+; [WORD]: Color attribute(BYTE)
+; [WORD]: Memory offset for page.
+; [WORD]: Screen width in current mode.
 ; ----------------------------------------------------------- ;
 DIBUJAR_LINEA PROC NEAR
 	; STACK - Prepare
@@ -26,51 +19,51 @@ DIBUJAR_LINEA PROC NEAR
 	MOV		BP, SP
 	PUSHA
 	
-	; Preparar las variables necesarias
+	; Prepare necesary variables
 	; BX + 8 -> deltaX
-	; BX + 6 -> signoX
+	; BX + 6 -> signX
 	; BX + 4 -> deltaY
-	; BX + 2 -> signoY
+	; BX + 2 -> signY
 	; BX + 0 -> error
 	MOV 	CX, 1
 	
-	; Delta 'x' y signo
+	; Delta 'x' and sign
 	MOV		AX, [BP+8]	; x1
 	SUB		AX, [BP+4]	; x0
 	CMP		AX, 0
-	JGE		NO_CORREGIR_DX
+	JGE		DRAW_LINE_NO_DX_CORRECTION
 		MOV		CX, -1
 		NEG		AX
 	
-	NO_CORREGIR_DX:
+	DRAW_LINE_NO_DX_CORRECTION:
 	PUSH	AX
 	PUSH	CX
 	MOV		DX, AX			; error = dx
 	
-	; Delta 'y' y signo
+	; Delta 'y' and sign
 	MOV		CX, 1
 	MOV		AX, [BP+10]	; y1
 	SUB		AX, [BP+6]	; y0
 	CMP		AX, 0
-	JGE		NO_CORREGIR_DY
+	JGE		DRAW_LINE_NO_DY_CORRECTION
 		MOV		CX, -1
 		NEG		AX
 	
-	NO_CORREGIR_DY:
+	DRAW_LINE_NO_DY_CORRECTION:
 	PUSH	AX
 	PUSH	CX
 	SUB		DX, AX		; error -= dy
 	
 	; Error
 	PUSH	DX
-	MOV		BX, SP		; Marca el primer valor de la pila
+	MOV		BX, SP		; Marks the first value of the stack.
 	
-	; Inicializar el registro de segmento y dato a copiar
-	MOV		AX, [BP+14] ; Offset de la pantalla
+	; Initializes the segment register and data to copy
+	MOV		AX, [BP+14] ; Screen offset
 	MOV		ES, AX
 	
-	DIBUJAR_CICLO_LINEA:
-		; Dibujar el pixel
+	DRAW_LINE_CYCLE:
+		; Draw the pixel
 		MOV		DX,	[BP+16]	; Ancho de la pantalla
 		MOV		AX, [BP+6]	; y0
 		MUL		DX
@@ -118,7 +111,7 @@ DIBUJAR_LINEA PROC NEAR
 		
 		DIBUJAR_FINAL_CICLO:
 		MOV		[BX], AX	; Guardar el valor del error
-		JMP		DIBUJAR_CICLO_LINEA
+		JMP		DRAW_LINE_CYCLE
 		
 
 	DIBUJAR_FINAL:

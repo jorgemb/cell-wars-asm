@@ -65,14 +65,14 @@ ENDM
 ; @param [WORD]: ID del Fago fuente
 ; @param [WORD]: ID del fago destino
 VIRUS_ACTIVAR_UNICO PROC NEAR
-	; Prepara la pila
+	; Prepares the stack
 	PUSH	BP
 	MOV		BP, SP
 	PUSHA
 
 	; Obtener la direcci�n del fago fuente y del virus
 	MOV		DX, [BP+6]		; ID fago fuente
-	PHAGE_ADDRESS DX		; Direcci�n en BX
+	PHAGE_ADDRESS DX		; Address in BX
 	MOV		SI, BX
 	
 	MOV		BX, [BP+4]		; Direcci�n del Virus
@@ -121,7 +121,7 @@ VIRUS_ACTIVAR_UNICO PROC NEAR
 	MOV		AX, [BP+6]					; ID fago fuente
 	MOV		BYTE PTR VIRUS_SOURCE[BX], AL
 	
-	; Reestablece la pila
+	; Restores the stack
 	POPA
 	POP		BP
 	RET
@@ -150,8 +150,8 @@ VIRUS_INICIALIZAR ENDP
 ; @param [WORD]: Cantidad de virus a activar
 ; @param [WORD]: ID fago destino
 ; @param [WORD]: ID fago fuente
-VIRUS_ACTIVAR PROC NEAR
-	; Prepara la pila
+VIRUS_ACTIVATE PROC NEAR
+	; Prepares the stack
 	PUSH	BP
 	MOV		BP, SP
 	PUSHA
@@ -189,11 +189,11 @@ VIRUS_ACTIVAR PROC NEAR
 	
 	VIRUS_ACTIVAR_FIN:
 	
-	; Reestablece la pila
+	; Restores the stack
 	POPA
 	POP		BP
 	RET
-VIRUS_ACTIVAR ENDP
+VIRUS_ACTIVATE ENDP
 
 ; Mueve un virus en la direcci�n tangente al fago dado. Este se calcula
 ; con la siguiente formula: Vx/Vy * Tx = -Ty donde Tx se especifica
@@ -295,12 +295,12 @@ VIRUS_EVOLUCION_COLISION_FAGO PROC NEAR
 	
 	; Se obtiene el ID del jugador del fago fuente y destino
 	; ..fuente
-	PHAGE_ADDRESS SI		; Direcci�n en BX
+	PHAGE_ADDRESS SI		; Address in BX
 	MOV		SI, BX
 	MOVZX	AX, BYTE PTR PHAGE_PLAYER[SI]
 	
 	; ..destino
-	PHAGE_ADDRESS DI		; Direcci�n en BX
+	PHAGE_ADDRESS DI		; Address in BX
 	MOV		DI, BX
 	MOVZX	DX, BYTE PTR PHAGE_PLAYER[DI]
 	

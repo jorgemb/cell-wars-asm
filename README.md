@@ -10,6 +10,15 @@ And keyboard for the other one:
 -	Press the number of the cell to select
 -	Press shift+number of the target cell to move viruses to target
 
+## Features
+Some of the interesting features supported by the game are
+- VGA mode
+- Double buffering
+- Mouse / Keyboard input
+- Mouse controlled main menu
+- Floating point math
+- Custom linear algebra library
+- Collision detection and obstacle avoidance (viruses can go around a phage if it is not the target phage)
 
 ## Prerrequisites
 In order to use you will need:

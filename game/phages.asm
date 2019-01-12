@@ -18,61 +18,61 @@
 	
 	PHAGES_INITIAL_DATA	DW	290, 170	; POSX,POSY
 					DB	25, 02		; Radius, Owner
-					DW	OFFSET FAGO_1		; Image
+					DW	OFFSET PHAGE_1		; Image
 					DW	0010		; Initial virus amount
 					
 					; Phage 1
 					DW	030, 030	; PosX,PosY
 					DB	25, 00		; Radius, Owner
-					DW	OFFSET FAGO_1		; Image
+					DW	OFFSET PHAGE_1		; Image
 					DW	0010		; Initial virus amount
 					
 					; Phage 2
 					DW	030, 93		; PosX,PosY
 					DB	15, 0FFH	; Radius, Owner
-					DW	OFFSET FAGO_2		; Image
+					DW	OFFSET PHAGE_2		; Image
 					DW	0020		; Initial virus amount
 					
 					; Phage 3
 					DW	160, 20		; PosX,PosY
 					DB	10, 0FFH	; Radius, Owner
-					DW	OFFSET FAGO_3		; Image
+					DW	OFFSET PHAGE_3		; Image
 					DW	0010		; Initial virus amount
 					
 					; Phage 4
 					DW	128, 060	; PosX,PosY
 					DB	10, 0FFH	; Radius, Owner
-					DW	OFFSET FAGO_3		; Image
+					DW	OFFSET PHAGE_3		; Image
 					DW	0010		; Initial virus amount
 					
 					; Phage 5
 					DW	120, 140	; PosX,PosY
 					DB	10, 0FFH	; Radius, Owner
-					DW	OFFSET FAGO_3	; Image
+					DW	OFFSET PHAGE_3	; Image
 					DW	0010		; Initial virus amount
 					
 					; Phage 6
 					DW	200, 140		; PosX,PosY
 					DB	10, 0FFH	; Radius, Owner
-					DW	OFFSET FAGO_3	; Image
+					DW	OFFSET PHAGE_3	; Image
 					DW	0010		; Initial virus amount
 					
 					; Phage 7
 					DW	192, 060		; PosX,PosY
 					DB	10, 0FFH	; Radius, Owner
-					DW	OFFSET FAGO_3	; Image
+					DW	OFFSET PHAGE_3	; Image
 					DW	0010		; Initial virus amount
 					
 					; Phage 8
 					DW	160, 100		; PosX,PosY
 					DB	15, 0FFH	; Radius, Owner
-					DW	OFFSET FAGO_2	; Image
+					DW	OFFSET PHAGE_2	; Image
 					DW	0050		; Initial virus amount
 					
 					; Phage 9
 					DW	290, 107		; PosX,PosY
 					DB	15, 0FFH	; Radius, Owner
-					DW	OFFSET FAGO_2	; Image
+					DW	OFFSET PHAGE_2	; Image
 					DW	0020		; Initial virus amount
 
 .CODE
@@ -172,7 +172,6 @@ VIRUS_PHAGE_VECTOR ENDP
 ; Collisions are not reported if is with source phage.
 ; @param [WORD]: Virus address
 ; @return [AX]: Collision 
-; ------------------------------------------------------------------------- ;
 VIRUS_PHAGE_COLLISION PROC NEAR
 	; Stack init
 	PUSH	BP
@@ -252,16 +251,13 @@ VIRUS_PHAGE_COLLISION PROC NEAR
 	RET
 VIRUS_PHAGE_COLLISION ENDP
 
-; ------------------------------------------------------------------------- ;
-; Verifica si hubo una colisi�n con alg�n fago. Si el virus
-; colisiona con otro virus regresa en AH = 01. Si colisiona con
-; el virus destion entonces AL = FF, si colisiona con otro entonces
-; en AL se guarda el ID del fago.
-; El virus no reporta colisiones cuando esta se realiza con su fago fuente.
-; @param [WORD]: Direcci�n del virus a verificar
-; @return [AX]: Valores de colisi�n (ver descripci�n).
-; ------------------------------------------------------------------------- ;
-VIRUS_COLISION_FAGO_MOUSE PROC NEAR
+; Verifies if there was a collision with another phage. If the virus
+; collides with a phage then AH=01; if collides with target
+; phage then AL = FF. If collides with any phage other than the target
+; then AL contains the ID of the other phage.
+; @param [WORD]: Address of the virus to verify
+; @return [AX]: Collision values (see description)
+VIRUS_COLLISION_PHAGE_MOUSE PROC NEAR
 	; Stack init
 	PUSH	BP
 	MOV		BP, SP
@@ -270,172 +266,168 @@ VIRUS_COLISION_FAGO_MOUSE PROC NEAR
 	PUSH	DX
 	PUSH	SI
 	
-	; Inicializa los registros
+	; Registry init
 	MOV		AX, 0
-	MOV		BX, [BP+4]		; ID del virus
+	MOV		BX, [BP+4]		; Virus ID
 	MOV		SI, BX
 	
-	; Revisa colisiones con cada fago
+	; Checks collisions with every phage
 	MOV		CX, PHAGE_QUANTITY
-	VIRUS_COLISION_FAGO_CICLO_M:
-		; Revisa que el fago no sea el fago fuente
+	VIRUS_COLLISION_PHAGE_CYCLE_M:
+		; Verifies if collision phage is source phage
 		MOV		DX, CX
 		DEC		DX
 		
 		CMP		DL, VIRUS_SOURCE[SI]
-		JE		VIRUS_COLISION_FAGO_FINCICLO_M
+		JE		VIRUS_COLLISION_PHAGE_ENDCYCLE_M
 
-		; Obtiene la direcci�n del virus al fago y la distancia entre ellos
+		; Obtains the direction from the virus to the phage and the distance
 		MOV		SI, [BP+4]
-		PHAGE_ADDRESS DX	; La direcci�n del fago est� en BX
+		PHAGE_ADDRESS DX	; Phage address 
 		
-		PUSH	00			; Vector sin normalizar
-		PUSH	BX			; Direcci�n del fago
-		PUSH	SI			; Direcci�n del virus
+		PUSH	00			; Unnormalized vector
+		PUSH	BX			; Phage address
+		PUSH	SI			; Virus address
 		CALL 	VIRUS_PHAGE_VECTOR
 		ADD		SP, 6
 		
-		PUSH	OFFSET FP1	; Vector fuente
+		PUSH	OFFSET FP1	; Source vector
 		CALL	VECTOR_MAGNITUDE
 		ADD		SP, 2
 		
-		; Compara el radio con la magnitud del vector
+		; Compares the phage radius with the vector magnitude
 		MOVSX	AX, BYTE PTR PHAGE_RADIUS[BX]
 		MOV		WORD PTR FP1, AX
-		FICOMP	WORD PTR FP1			; CMP Distancia con Radio
-		; FILD	WORD PTR FP1
-		; FCOMPP						; COMP Radio con Distancia
+		FICOMP	WORD PTR FP1			; CMP Radius distance
 		
 		FSTSW	AX
 		SAHF
-		JAE		VIRUS_COLISION_FAGO_FINCICLO_M
+		JAE		VIRUS_COLLISION_PHAGE_ENDCYCLE_M
 		
-		; .. hay colisi�n
+		; .. collision!
 		MOV		AH, 1
 		
-		; .. revisa si la colisi�n es con el destino
+		; .. checks if collision is with target
 		CMP		DL, VIRUS_PHAGE[SI]
-		JE		COLISION_DESTINO_M
+		JE		COLLISION_TARGET_M
 		
 		MOV		AL, DL
-		JMP		VIRUS_COLISION_FAGO_FIN_M
+		JMP		VIRUS_COLLISION_PHAGE_END_M
 	
-		COLISION_DESTINO_M:
+		COLLISION_TARGET_M:
 		MOV		AL, 0FFH
-		JMP		VIRUS_COLISION_FAGO_FIN_M
+		JMP		VIRUS_COLLISION_PHAGE_END_M
 	
-		VIRUS_COLISION_FAGO_FINCICLO_M:
+		VIRUS_COLLISION_PHAGE_ENDCYCLE_M:
 		MOV		AX, 0
 		
 		DEC		CX
-		JZ		VIRUS_COLISION_FAGO_FIN_M
-		JMP		VIRUS_COLISION_FAGO_CICLO_M
+		JZ		VIRUS_COLLISION_PHAGE_END_M
+		JMP		VIRUS_COLLISION_PHAGE_CYCLE_M
 	
-	VIRUS_COLISION_FAGO_FIN_M:
+	VIRUS_COLLISION_PHAGE_END_M:
 	
-	; Regresa la pila a su estado inicial
+	; Reset stack
 	POP		SI
 	POP		DX
 	POP		CX
 	POP		BX
 	POP		BP
 	RET
-VIRUS_COLISION_FAGO_MOUSE ENDP
+VIRUS_COLLISION_PHAGE_MOUSE ENDP
 
-; Moviliza la mitad de los virus del fago fuente al fago destino.
-; @param [WORD]: ID del fago fuente
-; @param [WORD]: ID del fago destino
-FAGOS_MOVILIZAR_VIRUS PROC NEAR
+; Moves half the viruses in a phage to the target phage
+; @param [WORD]: ID of source phage
+; @param [WORD]: ID of target phage
+PHAGES_MOVILIZE_VIRUS PROC NEAR
 .DATA
-	; Minima cantidad de virus que tiene que tener
-	; un fago para poder mandar virus
+	; Minimum amount of virus that a phage must have
+	; in order to be able to send viruses
 	MINIMO_VIRUS 	DW	5
 .CODE
-	; Prepara la pila
+	; Prepares the stack
 	PUSH	BP
 	MOV		BP, SP
 	PUSHA
 
-	; Obtiene la direcci�n del fago 
-	MOV		DX, [BP+4]		; ID del fago fuente
-	PHAGE_ADDRESS DX		; Direcci�n en BX
+	; Retrieves the phage address
+	MOV		DX, [BP+4]		; Source phage ID
+	PHAGE_ADDRESS DX		; Address in BX
 	MOV		SI, BX
 	
-	; Obtiene la mitad de los PHAGES del fuente y los activa
+	; Gets half the viruses in the source and activates them
 	MOV		AX, PHAGE_NVIRUS[SI]
-	;.. compara que tenga una cantidad m�nima de virus
+	;.. checks mimimum amount of viruses
 	CMP		AX, MINIMO_VIRUS
-	JL		FAGOS_MOVILIZAR_VIRUS_FIN
+	JL		PHAGES_MOVILIZE_VIRUS_END
 	
 	SHR		AX, 1
 	
 	SUB		WORD PTR PHAGE_NVIRUS[SI], AX
 	
-	PUSH	WORD PTR [BP+4]			; ID Fago fuente
-	PUSH	WORD PTR [BP+6]			; ID Fago destino
-	PUSH	AX				; Cantidad de virus a activar
-	CALL	VIRUS_ACTIVAR
+	PUSH	WORD PTR [BP+4]			; ID Source phage
+	PUSH	WORD PTR [BP+6]			; ID Target phage
+	PUSH	AX				; Amount of viruses to activate
+	CALL	VIRUS_ACTIVATE
 	ADD		SP, 6
 	
-	FAGOS_MOVILIZAR_VIRUS_FIN:
+	PHAGES_MOVILIZE_VIRUS_END:
 	
-	; Reestablece la pila
+	; Restores the stack
 	POPA
 	POP		BP
 	RET
-FAGOS_MOVILIZAR_VIRUS ENDP
+PHAGES_MOVILIZE_VIRUS ENDP
 
-; Actualiza los PHAGES al aumentarles la cantidad de
-; virus que tienen. Los virus aumentan a una raz�n
-; de 1/5 radio por segundo.
-FAGOS_ACTUALIZAR PROC NEAR
+; Updates the phages' virus count. The ratio used is 
+; 1/5 of the radius per second.
+PHAGES_UPDATE PROC NEAR
 .DATA
-	FAGOS_AUMENTO	DW		5
+	PHAGES_INCREASE	DW		5
 .CODE
-	; Guarda los registros
+	; Saves registers
 	PUSHA
 	
-	; Itera por cada fago
+	; Loops on every phage
 	MOV		CX, PHAGE_QUANTITY
-	FAGOS_ACTUALIZAR_CICLO:
+	PHAGES_UPDATE_CYCLE:
 		MOV		DX, CX
-		DEC		DX			; ID del fago actual
-		PHAGE_ADDRESS DX	; La direcci�n del fago se guarda en BX
+		DEC		DX			; ID of current phage
+		PHAGE_ADDRESS DX	; Address in BX
 		
-		; Revisa que el fago pertenezca a un jugador
+		; Checks that the phage belongs to a player
 		CMP		BYTE PTR PHAGE_PLAYER[BX], 0FFH
-		JE		FAGOS_CICLO_FIN
+		JE		PHAGES_UPDATE_CYCLE_END
 		
-		; Aumenta la cantidad de virus en el fago
+		; Increases the amount of viruses in the phage
 		MOVZX	AX, BYTE PTR PHAGE_RADIUS[BX]
 		MOV		DX, 0
-		DIV		WORD PTR FAGOS_AUMENTO
+		DIV		WORD PTR PHAGES_INCREASE
 		
 		ADD		PHAGE_NVIRUS[BX], AX
 		
-		; .. comparar que la cantidad de virus no sea mayor
-		; a dos veces el radio del fago
+		; .. checks that the amount of viruses is not greater
+		; than twice its radius.
 		MOVSX	AX, BYTE PTR PHAGE_RADIUS[BX]
 		SHL		AX, 1
 		CMP		AX, WORD PTR PHAGE_NVIRUS[BX]
-		JG		FAGOS_CICLO_FIN
+		JG		PHAGES_UPDATE_CYCLE_END
 		MOV		WORD PTR PHAGE_NVIRUS[BX], AX
 		
-		FAGOS_CICLO_FIN:
-		LOOP	FAGOS_ACTUALIZAR_CICLO
+		PHAGES_UPDATE_CYCLE_END:
+		LOOP	PHAGES_UPDATE_CYCLE
 	
-	; Reestablece los registros
+	; Restore registers
 	POPA
 	RET
-FAGOS_ACTUALIZAR ENDP
+PHAGES_UPDATE ENDP
 
+; Returns the ID of the selected phage.
+; @param [WORD]: ID of the player(0 = Player 1, 1 = Player 2)
+; @return [AX]: ID of selected phage
+; 		( FF0 if no phage is selected)
 ; ------------------------------------------------------------ ;
-; Devuelve el ID del fago seleccionado por un jugador
-; @param [WORD]: ID del jugador (0 = Jugador 1, 1 = Jugador 2)
-; @return [AX]: ID del fago seleccionado 
-; 		( FF0 si ning�n fago est� seleccionado)
-; ------------------------------------------------------------ ;
-FAGO_OBTENER_SELECCIONADO PROC NEAR
+PHAGE_GET_SELECTED PROC NEAR
 	; Stack init
 	PUSH	BP
 	MOV		BP, SP
@@ -443,125 +435,122 @@ FAGO_OBTENER_SELECCIONADO PROC NEAR
 	PUSH	CX
 	PUSH	DX
 	
-	MOV		AX, [BP+4]		; ID del jugador
-	SHL		AX, 1			; Corrige el ID (0 = J1 y 2 = J2)
+	MOV		AX, [BP+4]		; Player ID
+	SHL		AX, 1			; Corrects ID (0 = P1 y 2 = P2)
 	
-	; Itera por cada uno de los PHAGES
+	; Loops on every phage
 	MOV		CX, PHAGE_QUANTITY
-	FAGO_OBTENER_S_CICLO:
+	PHAGE_GET_SELECTED_CYCLE:
 		MOV		DX, CX
-		DEC		DX			; Correcci�n de posici�n
+		DEC		DX			; Position correction
 		
-		; Obtener la direcci�n del fago
-		PHAGE_ADDRESS DX	; Direcci�n en BX
+		; Get phage address
+		PHAGE_ADDRESS DX	; Address in BX
 		
-		; Verificar si el fago pertenece al jugador
+		; Checks if the phage belongs to the player
 		MOVZX		DX, BYTE PTR PHAGE_PLAYER[BX]
 		SHR			DX, 1
 		SHL			DX, 1
 		CMP			DX, AX
-		JNE			FAGO_OBTENER_S_CICLO_FIN
+		JNE			PHAGE_GET_S_CYCLE_END
 		
 		; Verificar si el fago est� seleccionado
 		CMP			DL, BYTE PTR PHAGE_PLAYER[BX]
-		JE			FAGO_OBTENER_S_CICLO_FIN
-		; .. si no son iguales, significa que estaba seleccionado
+		JE			PHAGE_GET_S_CYCLE_END
+
+		; .. if not the same means it was selected
 		MOV			AX, CX
 		DEC			AX
-		JMP			FAGO_OBTENER_S_FIN
+		JMP			PHAGE_GET_S_END
 		
-		FAGO_OBTENER_S_CICLO_FIN:
-		LOOP FAGO_OBTENER_S_CICLO
+		PHAGE_GET_S_CYCLE_END:
+		LOOP PHAGE_GET_SELECTED_CYCLE
 	
-	MOV		AX, 0FFH			; Ning�n fago encontrado
-	JMP		FAGO_OBTENER_S_FIN
+	MOV		AX, 0FFH			; No phage found
+	JMP		PHAGE_GET_S_END
 	
-	FAGO_OBTENER_S_FIN:
-	; Restaurar pila
+	PHAGE_GET_S_END:
+	; Restore stack
 	POP		DX
 	POP		CX
 	POP		BX
 	POP		BP
 	RET
-FAGO_OBTENER_SELECCIONADO ENDP
+PHAGE_GET_SELECTED ENDP
 
+; Tries to select a phage for a player, but only if the player
+; owns the phage. Deselects any other phage of the player.
+; @param [WORD]: ID of the player (P1 = 0, P2 = 1)
+; @param [WORD]: ID of the phage to select
 ; --------------------------------------------------------------- ;
-; Trata de seleccionar un fago para un jugador, siempre y cuando
-; el jugador sea due�o del fago. Deselecciona cualquier otro fago
-; del jugador.
-; @param [WORD]: ID del jugador (J1 = 0, J2 = 1)
-; @param [WORD]: ID del fago a seleccionar
-; --------------------------------------------------------------- ;
-FAGO_SELECCIONAR PROC NEAR
+PHAGE_SELECT PROC NEAR
 	; Stack init
 	PUSH	BP
 	MOV		BP, SP
 	PUSHA
 	
-	; Deselecciona todos los PHAGES del jugador
-	PUSH	WORD PTR [BP+4] 		; ID del jugador
-	CALL	FAGO_DESELECCIONAR
+	; Deselects all the phages of the player
+	PUSH	WORD PTR [BP+4] 		; ID of the player
+	CALL	PHAGE_DESELECT
 	ADD		SP, 2
 	
-	; Determina si el fago objetivo es del jugador
-	MOV		AX, [BP+4]		; ID del jugador
-	SHL		AX, 1			; Corrige el ID del jugador (J1 = 0, J2 = 2)
+	; Determines if the phage belongs to the player
+	MOV		AX, [BP+4]		; ID of the player
+	SHL		AX, 1			; Player ID correction (P1 = 0, P2 = 2)
 	
-	MOV		DX, [BP+6]		; ID del fago
-	PHAGE_ADDRESS DX		; Direccion en BX
+	MOV		DX, [BP+6]		; ID of the phage
+	PHAGE_ADDRESS DX		; Address in BX
 	
 	CMP		AL, BYTE PTR PHAGE_PLAYER[BX]
-	JNE		FAGO_SELECCIONAR_FIN
+	JNE		PHAGE_SELECT_END
 	
 	; .. selecciona el fago objetivo
 	INC		AL
 	MOV		BYTE PTR PHAGE_PLAYER[BX], AL
 	
-	FAGO_SELECCIONAR_FIN:
-	; Restaura la pila
+	PHAGE_SELECT_END:
+	; Restores the stack
 	POPA
 	POP		BP
 	RET
-FAGO_SELECCIONAR ENDP
+PHAGE_SELECT ENDP
 
-; ------------------------------------------------------------ ;
-; Deselecciona cualquier fago seleccionado por alg�n jugador.
-; @param [WORD]: ID del jugador (J1 = 0, J2 = 1)
-; ------------------------------------------------------------ ;
-FAGO_DESELECCIONAR PROC NEAR
-	; Prepara la pila
+; Deselects any phage selected by a player.
+; @param [WORD]: ID of the player (P1 = 0, P2 = 1)
+PHAGE_DESELECT PROC NEAR
+	; Prepares the stack
 	PUSH	BP
 	MOV		BP, SP
 	PUSHA
 	
-	MOV		AX, [BP+4]		; ID del jugador
-	SHL		AX, 1			; Corrige el ID del jugador (J1 = 0, J2 = 2)
+	MOV		AX, [BP+4]		; ID of the player
+	SHL		AX, 1			; Corrects the ID of the player (P1=0,P2=1)
 	
-	; Itera por cada uno de los PHAGES
+	; Loops on every phage
 	MOV		CX, PHAGE_QUANTITY
-	FAGO_DESELECCIONAR_CICLO:
+	PHAGE_DESELECT_CYCLE:
 		MOV		DX, CX
-		DEC		DX			; Correcci�n de posici�n
+		DEC		DX			; Position correction
 		
-		; Obtiene la direcci�n del fago y el jugador del mismo
-		PHAGE_ADDRESS DX	; Direccion en BX
+		; Gets the address of the phage and its player
+		PHAGE_ADDRESS DX	; Address in BX
 		
 		MOVZX	DX, BYTE PTR PHAGE_PLAYER[BX]
 		SHR		DX, 1
-		SHL		DX, 1	; Elimina el bit de seleccion
+		SHL		DX, 1	; Remove selection bit
 		CMP		AX, DX
-		JNE		FAGO_DESELECCIONAR_CICLO_FIN
+		JNE		PHAGE_DESELECT_CYCLE_END
 		
 		; Deselecciona el fago
 		MOV		BYTE PTR PHAGE_PLAYER[BX], AL
 		
-		FAGO_DESELECCIONAR_CICLO_FIN:
-		LOOP FAGO_DESELECCIONAR_CICLO
+		PHAGE_DESELECT_CYCLE_END:
+		LOOP PHAGE_DESELECT_CYCLE
 	
-	; Restaura la pila
+	; Restores the stack
 	POPA
 	POP		BP
 	RET
-FAGO_DESELECCIONAR ENDP
+PHAGE_DESELECT ENDP
 
 

@@ -381,7 +381,7 @@ PHAGES_MOVILIZE_VIRUS ENDP
 
 ; Updates the phages' virus count. The ratio used is 
 ; 1/5 of the radius per second.
-PHAGES_UPDATE PROC NEAR
+UPDATE_PHAGES PROC NEAR
 .DATA
 	PHAGES_INCREASE	DW		5
 .CODE
@@ -420,7 +420,7 @@ PHAGES_UPDATE PROC NEAR
 	; Restore registers
 	POPA
 	RET
-PHAGES_UPDATE ENDP
+UPDATE_PHAGES ENDP
 
 ; Returns the ID of the selected phage.
 ; @param [WORD]: ID of the player(0 = Player 1, 1 = Player 2)

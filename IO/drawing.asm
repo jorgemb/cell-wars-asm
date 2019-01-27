@@ -13,7 +13,7 @@
 ; [WORD]: Memory offset for page.
 ; [WORD]: Screen width in current mode.
 ; ----------------------------------------------------------- ;
-DIBUJAR_LINEA PROC NEAR
+DRAW_LINE PROC NEAR
 	; STACK - Prepare
 	PUSH	BP
 	MOV		BP, SP
@@ -64,27 +64,27 @@ DIBUJAR_LINEA PROC NEAR
 	
 	DRAW_LINE_CYCLE:
 		; Draw the pixel
-		MOV		DX,	[BP+16]	; Ancho de la pantalla
+		MOV		DX,	[BP+16]	; Screen width
 		MOV		AX, [BP+6]	; y0
 		MUL		DX
-		ADD		AX, [BP+4]	; AX = (y0*ancho)+x0
+		ADD		AX, [BP+4]	; AX = (y0*width)+x0
 		MOV		DI, AX
 		
-		MOV		AX, [BP+12]	; Byte de atributo
+		MOV		AX, [BP+12]	; Attribute byte
 		STOSB
 		
-		; Avanzar el ciclo
+		; Next step of cycle
 		; if x0 == x1 and y0 == y1 exit
 		MOV		AX, [BP+4]	; x0
 		XOR		AX, [BP+8]	; x1
 		CMP		AX, 0
-		JNE		DIBUJAR_CICLO_CONTINUAR
+		JNE		DRAW_LINE_CYCLE_CONTINUE
 		MOV		AX, [BP+6]	; y0
 		XOR		AX, [BP+10]	; y1
 		CMP		AX, 0
-		JE		DIBUJAR_FINAL
+		JE		DRAW_LINE_END
 		
-		DIBUJAR_CICLO_CONTINUAR:
+		DRAW_LINE_CYCLE_CONTINUE:
 		MOV		AX, [BX]	; error
 		MOV		DX, AX		; error
 		SHL		DX, 1		; error*2
@@ -92,34 +92,34 @@ DIBUJAR_LINEA PROC NEAR
 		MOV		CX,	[BX+4]	; delta y
 		NEG		CX
 		CMP		DX, CX		; cmp error*2, -deltaY
-		JLE		DIBUJAR_CICLO_COMPX
+		JLE		DRAW_LINE_CYCLE_COMPX
 		ADD		AX, CX		; error = error - deltaY
 		
 		MOV		CX, [BP+4]	; x0
-		ADD		CX, [BX+6]	; x0 + signoX
+		ADD		CX, [BX+6]	; x0 + signX
 		MOV		[BP+4], CX
 		
-		DIBUJAR_CICLO_COMPX:
+		DRAW_LINE_CYCLE_COMPX:
 		MOV		CX, [BX+8]	; deltax
 		CMP		DX, CX		; cmp error*2, deltaX
-		JGE		DIBUJAR_FINAL_CICLO
+		JGE		DRAW_LINE_CYCLE_END
 		ADD		AX, CX		; error = error + deltaX
 		
 		MOV		CX, [BP+6]	; y0
 		ADD		CX, [BX+2];	; y0 + signoY
 		MOV		[BP+6], CX
 		
-		DIBUJAR_FINAL_CICLO:
-		MOV		[BX], AX	; Guardar el valor del error
+		DRAW_LINE_CYCLE_END:
+		MOV		[BX], AX	; Save the error value
 		JMP		DRAW_LINE_CYCLE
 		
 
-	DIBUJAR_FINAL:
+	DRAW_LINE_END:
 	; STACK - Restore
-	ADD		SP, 10	; Liberar las variables locales
+	ADD		SP, 10	; Release local variables
 	POPA
 	POP		BP
 	RET
-DIBUJAR_LINEA ENDP
+DRAW_LINE ENDP
 
 

@@ -44,7 +44,7 @@ ENDM
 ; deve de estar en un registro o en memoria (y no puede ser AX)
 ; Devuelve la direcci�n en BX.
 VIRUS_DIRECCION MACRO ID_VIRUS
-	; Guarda los registros
+	; Save registers
 	PUSH	AX
 	PUSH	DX
 
@@ -54,7 +54,7 @@ VIRUS_DIRECCION MACRO ID_VIRUS
 	LEA		BX, VIRUS
 	ADD		BX, AX
 	
-	; Reestablece los registros
+	; Restore registers
 	POP		DX
 	POP		AX
 ENDM
@@ -130,7 +130,7 @@ VIRUS_ACTIVAR_UNICO ENDP
 ; ------------------------------------------ ;
 ; Inicializa todos los virus como inactivos.
 ; ------------------------------------------ ;
-VIRUS_INICIALIZAR PROC NEAR
+VIRUS_INITIALIZE PROC NEAR
 	PUSHA
 	
 	MOV		CX, VIRUS_QUANTITY
@@ -143,7 +143,7 @@ VIRUS_INICIALIZAR PROC NEAR
 	
 	POPA
 	RET
-VIRUS_INICIALIZAR ENDP
+VIRUS_INITIALIZE ENDP
 
 ; Activa una cantidad especificada de virus para que se salgan del fago
 ; dado y se dirijan al objetivo.
@@ -426,8 +426,8 @@ VIRUS_MOVER ENDP
 
 ; Itera por cada uno de los virus y mueve todo aquel que
 ; sea v�lido hacia su posici�n.
-VIRUS_ACTUALIZAR PROC NEAR
-	; Guardar registros
+UPDATE_VIRUSES PROC NEAR
+	; Save registers
 	PUSHA
 
 	MOV		CX, VIRUS_QUANTITY
@@ -448,8 +448,8 @@ VIRUS_ACTUALIZAR PROC NEAR
 		ACTUALIZAR_VIRUS_CICLO_FIN:
 		LOOP ACTUALIZAR_VIRUS_CICLO
 	
-	; Reestablecer registros
+	; Restor registers
 	POPA
 	RET
-VIRUS_ACTUALIZAR ENDP
+UPDATE_VIRUSES ENDP
 

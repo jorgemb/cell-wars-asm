@@ -1,136 +1,119 @@
 ;###########################################;
-;Universidad del Valle de Guatemala			;
-;Organizaci�n de Computadoras y Assembler	;
-;											;
-; Este lugar contiene el punto de entrada	;
-; del juego en s�, junto con el ciclo		;
-; del mismo.								;
-;											;
-;Eddy Omar Castro J�uregui - 11032			;
-;Jorge Luis Mart�nez Bonilla - 11237		;
+; Game entry point and game cycle.			;
 ;###########################################;
 
 .DATA
-	; Marca cada vez que hay un cambio de un segundo en el tiempo
-	TIEMPO_CAMBIO_SEGUNDO		DB	0
-	TIEMPO_SEGUNDO_ANTERIOR		DB	0
+	; Keep track if there has been a change in time
+	TIME_SECOND_CHANGE		DB	0
+	TIME_SECOND_PREVIOUS	DB	0
 .CODE
 
-; ------------------------------------------- ;
-; Obtiene el tiempo del sistema y pone en AX 
-; ------------------------------------------- ;
-OBTENER_TIEMPO PROC NEAR
-	; Guarda los registros
+; Gets the system time and puts it in AX.
+GET_SYSTEM_TIME PROC NEAR
+	; Save registers
 	PUSH	CX
 	PUSH	DX
 	
-	; .. obtiene el tiempo del sistema en cent�simas de segundo
+	; .. retrieves the time to the nearest hundredth of a second
 	MOV		AH, 2CH
 	INT		21H
 	
-	; .. actualiza el cambio de segundo
-	CMP		DH, TIEMPO_SEGUNDO_ANTERIOR
-	JE		TIEMPO_NO_CAMBIO
-	MOV 	TIEMPO_CAMBIO_SEGUNDO, 01H
-	JMP		TIEMPO_CAMBIO_FIN
-	TIEMPO_NO_CAMBIO:
-	MOV		TIEMPO_CAMBIO_SEGUNDO, 00H
-	TIEMPO_CAMBIO_FIN:
-	MOV		TIEMPO_SEGUNDO_ANTERIOR, DH
+	; .. updates seconds change
+	CMP		DH, TIME_SECOND_PREVIOUS
+	JE		GET_SYSTEM_TIME_NO_CHANGE
+	MOV 	TIME_SECOND_CHANGE, 01H
+	JMP		GET_SYSTEM_TIME_END
+	GET_SYSTEM_TIME_NO_CHANGE:
+	MOV		TIME_SECOND_CHANGE, 00H
+	GET_SYSTEM_TIME_END:
+	MOV		TIME_SECOND_PREVIOUS, DH
 	
-	; .. calcula la cantidad de cent�simas por los segundos
-	MOV		AL, DH		; AL = Segundos
+	; .. calculates the number of hundredths times seconds
+	MOV		AL, DH		; AL = seconds
 	MOV		AH, 100		;
-	MUL		AH			; AX = Segundos * 100
+	MUL		AH			; AX = seconds * 100
 	
 	MOV		DH, 0
-	ADD		AX, DX		; AX = (Segundos*100) + Centesimas
+	ADD		AX, DX		; AX = (seconds*100) + hundredths
 	
-	; Reestablece los registros
+	; Restore registers
 	POP		DX
 	POP		CX
 	RET
-OBTENER_TIEMPO ENDP
+GET_SYSTEM_TIME ENDP
 
-; ------------------------------------------------- ;
-; Actualiza el delta del tiempo para cada Frame.
-; DELTA y ANTERIOR son variables de tipo WORD.
-; CORRECCION debe de ser un valor inmediato.
-; ------------------------------------------------- ;
-ACTUALIZAR_TIEMPO MACRO DELTA, ANTERIOR, CORRECCION
-	LOCAL   NO_CORREGIR
+; Updates the delta time per each frame in the game
+; loop.
+; CORRECT must be an immediate value.
+UPDATE_TIME MACRO DELTA, PREVIOUS, CORRECT
+	LOCAL   DONT_CORRECT
 
-	; Guarda los registros
+	; Save registers
 	PUSH	AX
 	PUSH	BX
 	PUSH	CX
 	PUSH	DX
 	
-	; Obtiene el tiempo actual
-	CALL 	OBTENER_TIEMPO
-	CMP		AX, ANTERIOR
-	JGE		NO_CORREGIR
+	; Gets current time
+	CALL 	GET_SYSTEM_TIME
+	CMP		AX, PREVIOUS
+	JGE		DONT_CORRECT
 	
-	; ..realizar correcci�n del tiempo
-	SUB 	ANTERIOR, CORRECCION
+	; .. do time correction
+	SUB 	PREVIOUS, CORRECT
 	
-	; .. calcula el delta
-	NO_CORREGIR:
+	; .. calculates delta
+	DONT_CORRECT:
 	MOV		BX, AX
-	SUB		BX, ANTERIOR
+	SUB		BX, PREVIOUS
 	MOV		DELTA, BX
-	MOV		ANTERIOR, AX
+	MOV		PREVIOUS, AX
 	
-	; Reestablece los registros
+	; Restore registers
 	POP		DX
 	POP		CX
 	POP		BX
 	POP		AX
 ENDM
-; ------------------------------------------------- ;
 
-; --------------------------------------- :
-; Contiene el punto de entrada del juego.
-; --------------------------------------- :
+; Game entry point
 PLAY_GAME PROC NEAR
 .DATA
-	TIEMPO_CORRECCION	EQU	6000d
+	TIME_CORRECTION	EQU	6000d
 .CODE
-	; Inicializa el tiempo y variables del juego
+	; Initializes time and game variables
 	MOV		DELTA_TIME, 1
 	MOV		GAME_ACTIVE, 1
-	;CALL 	VIRUS_INICIALIZAR
 	CALL	CHANGE_GRAPHIC_MODE
 	
-	; .. obtiene el tiempo del sistema
-	CALL	OBTENER_TIEMPO
+	CALL	GET_SYSTEM_TIME
 	MOV		PREVIOUS_TIME, AX
 	
-	; Inicio del ciclo
-	CICLO_JUGAR:
+	; Game loop
+	PLAY_GAME_LOOP:
 		
-		; Actualiza todos los sistemas
-		CALL 	ACTUALIZAR_ENTRADA
-		CALL 	ACTUALIZAR_LOGICA
-		CALL 	ACTUALIZAR_GRAFICOS
+		; Update every system
+		CALL 	UPDATE_INPUT
+		CALL 	UPDATE_LOGIC
+		CALL 	UPDATE_GRAPHICS
 		
-		; Calcula el delta del tiempo
-		ACTUALIZAR_TIEMPO 	DELTA_TIME, PREVIOUS_TIME, TIEMPO_CORRECCION
+		; Calculate time delta
+		UPDATE_TIME 	DELTA_TIME, PREVIOUS_TIME, TIME_CORRECTION
 		FILD	DELTA_TIME
 		FILD	TIME_DIVIDEND
 		FDIV
 		FSTP	PREVIOUS_TIME_F
 		
-		; Revisa las condiciones de victoria
-		; Si alguien gana entonces se sale del juego
-		CALL	REVISAR_VICTORIA
+		; Check victory conditions.
+		; If somebody wins the game is over.
+		CALL	CHECK_VICTORY
 		CMP		AX, 00
-		JNE		JUGAR_FIN
+		JNE		PLAY_GAME_END
 		
 		CMP		GAME_ACTIVE, 0
-		JNE		CICLO_JUGAR
+		JNE		PLAY_GAME_LOOP
 	
-	JUGAR_FIN:
+	PLAY_GAME_END:
 	PUSH	AX
 	CALL	CLEAN_KEYBOARD
 	POP		AX
@@ -144,129 +127,123 @@ PLAY_GAME PROC NEAR
 	RET
 PLAY_GAME ENDP
 
-; ------------------------------ ;
-; Inicializa los datos del juego
-; ------------------------------ ;
+; Initialize game data
 GAME_INIT PROC NEAR
-	; Inicializa los virus
-	CALL	VIRUS_INICIALIZAR
+	; Initialize virus
+	CALL	VIRUS_INITIALIZE
 	CALL	SHOW_CURSOR
 	
-	; Inicializa los PHAGES
+	; Initialize phages
 	CALL	PHAGES_INITIALIZE
 	
 	RET
 GAME_INIT ENDP
 
-; Determina si alguno de los dos jugadores ha ganado/perdido
-; el juego.
-; @return [AX]: Regresa 00 si ninguno ha ganado, 01 si gan�
-; el jugador uno y 02 si gan� el jugador dos.
-REVISAR_VICTORIA PROC NEAR
-	; Guardar registros
+; Determines if one of the players was won/lost.
+; @return [AX]: Returns 00 if no player has won, 01 if player one wins
+; and 02 if player two won.
+CHECK_VICTORY PROC NEAR
+	; Save registers
 	PUSH	BX
 	PUSH	CX
 	PUSH	DX
 	PUSH	SI
 	PUSH	DI
 	
-	; Itera por cada fago para verificar a qu� jugador
-	; pertenece cada uno. Si un jugador no posee ning�n fago
-	; entonces pierde.
-	MOV		SI, 0			; Jugador 1
-	MOV		DI, 0			; Jugador 2
+	; Loops on every phage to check which player owns it.
+	; If a player owns no phage then loses.
+	MOV		SI, 0			; Player 1
+	MOV		DI, 0			; Player 2
 	MOV		CX, PHAGE_QUANTITY
-	VICTORIA_CICLO:
-		; Obtiene la direcci�n del fago
+	CHECK_VICTORY_CYCLE:
+		; Get phage address
 		MOV		DX, CX
 		DEC		DX
-		PHAGE_ADDRESS DX		; La direcci�n del fago en BX
+		PHAGE_ADDRESS DX		; Address in BX
 		
-		; Revisa de qu� jugador es
+		; Check who owns the phage
 		MOV			AL, BYTE PTR PHAGE_PLAYER[BX]
 		CMP			AL, 0FFH
-		JE			VICTORIA_FIN_CICLO
+		JE			CHECK_VICTORY_CYCLE_END
 		
-		SHR			AL, 1			; Obtiene el ID del jugador
+		SHR			AL, 1			; Get player ID
 		CMP			AL, 00H
-		JNE			VICTORIA_INC_J2
-			; Incrementa a Jugador 1
+		JNE			CHECK_VICTORY_INC_P2
+			; Increments player 1
 			INC		SI
-			JMP		VICTORIA_FIN_CICLO
+			JMP		CHECK_VICTORY_CYCLE_END
 		
-		VICTORIA_INC_J2:
-			; Incrementa a Jugador 2
+		CHECK_VICTORY_INC_P2:
+			; Increments player 2
 			INC		DI
 		
-		VICTORIA_FIN_CICLO:
-		LOOP	VICTORIA_CICLO
+		CHECK_VICTORY_CYCLE_END:
+		LOOP	CHECK_VICTORY_CYCLE
 	
-	; Compara si alguno tiene cero PHAGES
+	; Checks if one of the players has zero phages
 	MOV		AX, 0
 	
-	; .. J1
+	; .. P1
 	CMP		SI, 0
-	JE		VICTORIA_J2
+	JE		VICTORY_P2
 	
-	; .. J2
+	; .. P2
 	CMP		DI, 0
-	JE		VICTORIA_J1
+	JE		VICTORY_P1
 	
-	JMP		VICTORIA_FIN
+	JMP		CHECK_VICTORY_END
 	
-	VICTORIA_J2:
+	VICTORY_P2:
 	MOV		AX, 02
-	JMP		VICTORIA_FIN
+	JMP		CHECK_VICTORY_END
 	
-	VICTORIA_J1:
+	VICTORY_P1:
 	MOV		AX, 01
-	JMP		VICTORIA_FIN
+	JMP		CHECK_VICTORY_END
 	
-	VICTORIA_FIN:
-	; Reestablecer registros
+	CHECK_VICTORY_END:
+	; Restor registers
 	POP		DI
 	POP		SI
 	POP		DX
 	POP		CX
 	POP		BX
 	RET
-REVISAR_VICTORIA ENDP
+CHECK_VICTORY ENDP
 
-; ---------------------------------------------------- ;
-; Actualiza los elementos de entrada: Mouse y Teclado
-; ---------------------------------------------------- ;
-ACTUALIZAR_ENTRADA PROC NEAR
-	; Verifica el teclado y el mouse
-	CALL ACTUALIZAR_TECLADO
-	CALL ACTUALIZAR_MOUSE
+; Updates Mouse and Keyboard input
+UPDATE_INPUT PROC NEAR
+	; Verifies mouse and keyboard
+	CALL UPDATE_KEYBOARD
+	CALL UPDATE_MOUSE
 	
 	RET
-ACTUALIZAR_ENTRADA ENDP
+UPDATE_INPUT ENDP
 
-; Act�a conforme se presionen las teclas del jugador 
-; uno para enviar virus de un fago a otro.
-ACTUALIZAR_TECLADO PROC NEAR
+; Acts according to the pressed keys for Player 1.
+UPDATE_KEYBOARD PROC NEAR
 	PUSHA
-	; Verifica el estado del teclado
+
+	; Verify keyboard state
 	PUSH	0
 	CALL	GETC_EXTENDED
 	ADD		SP, 2
 	
 	CMP		AL, 0
-	JE		ACTUALIZAR_TECLADO_FIN
+	JE		UPDATE_KEYBOARD_END
 	
-	; ESCAPE - Finaliza el juego
+	; ESCAPE - Ends the game
 	CMP		AL, 27
-	JNE		ACTUALIZAR_ENTRADA_ESC
+	JNE		UPDATE_KEYBOARD_ESCAPE
 	MOV		GAME_ACTIVE, 0	
-	JMP		ACTUALIZAR_TECLADO_FIN
+	JMP		UPDATE_KEYBOARD_END
 	
-	ACTUALIZAR_ENTRADA_ESC:
+	UPDATE_KEYBOARD_ESCAPE:
 	
 	MOV		DH, 0
 	MOV		DL, AL
 	
-	; Determina si la tecla que se presion� es un n�mero
+	; Checks if the pressed key is a number
 	BP2:
 	PUSH	30H		; Menor
 	PUSH	39H		; Mayor
@@ -275,42 +252,41 @@ ACTUALIZAR_TECLADO PROC NEAR
 	ADD		SP, 6
 	
 	CMP		AH, 0
-	JE		ACTUALIZAR_TECLADO_SHIFT
+	JE		UPDATE_KEYBOARD_SHIFT
 	
-	; Lo que se presiono es un n�mero sin shift
-	; .. selecciona el fago
+	; A number was pressed without shift, so a phage is selected.
 	SUB		DX, 30H
 	PUSH	DX
 	PUSH	0
 	CALL	PHAGE_SELECT
 	ADD		SP, 4
-	JMP		ACTUALIZAR_TECLADO_FIN
+	JMP		UPDATE_KEYBOARD_END
 	
-	ACTUALIZAR_TECLADO_SHIFT:
-	; Verifica si los c�digos son los de shift
-	PUSH	20H		; Menor
+	UPDATE_KEYBOARD_SHIFT:
+	; Verifies shift codes
+	PUSH	20H		; Minor
 	PUSH	29H		; Mayor
-	PUSH	DX		; Tecla
+	PUSH	DX		; Key
 	CALL	VERIFY_VALUE
 	ADD		SP, 6
 	
 	CMP		AH, 0
-	JNE		ACTUALIZAR_TECLADO_ENVIAR
+	JNE		UPDATE_KEYBOARD_SEND
 	
-	; ..revisar los casos especiales de 7 y 0
+	; Check special cases for 7 and 0
 	CMP		DL, 2FH
-	JNE		TECLADO_CASO_CERO
+	JNE		UPDATE_KEYBOARD_CASE0
 	MOV		DL, 27H
-	JMP		ACTUALIZAR_TECLADO_ENVIAR
+	JMP		UPDATE_KEYBOARD_SEND
 	
-	TECLADO_CASO_CERO:
+	UPDATE_KEYBOARD_CASE0:
 	CMP		DL, 3DH
-	JNE		ACTUALIZAR_TECLADO_FIN
+	JNE		UPDATE_KEYBOARD_END
 	MOV		DL, 20H
-	JMP		ACTUALIZAR_TECLADO_ENVIAR
+	JMP		UPDATE_KEYBOARD_SEND
 	
-	; .. manda los virus al fago objetivo
-	ACTUALIZAR_TECLADO_ENVIAR:
+	; Sends the viruses to the selected phage
+	UPDATE_KEYBOARD_SEND:
 	SUB		DL, 20H
 	
 	PUSH	0
@@ -318,29 +294,29 @@ ACTUALIZAR_TECLADO PROC NEAR
 	ADD		SP, 2
 	
 	CMP		AX, 0FFH
-	JE		ACTUALIZAR_TECLADO_FIN
+	JE		UPDATE_KEYBOARD_END
 	CMP		AX, DX
-	JE		ACTUALIZAR_TECLADO_FIN
+	JE		UPDATE_KEYBOARD_END
 	
 	PUSH	DX
 	PUSH	AX
 	CALL	PHAGES_MOVILIZE_VIRUS
 	ADD		SP, 4
 
-	ACTUALIZAR_TECLADO_FIN:
+	UPDATE_KEYBOARD_END:
 	POPA
 	RET
-ACTUALIZAR_TECLADO ENDP
+UPDATE_KEYBOARD ENDP
 
-; Actualiza el mouse en pantalla, y act�a si se presiona
-; clic izquierdo o derecho sobre un fago.
-ACTUALIZAR_MOUSE PROC NEAR
-	; Guardar registros
+; Updates the mouse on the screen, and acts if left or right
+; clic is pressed.
+UPDATE_MOUSE PROC NEAR
+	; Save registers
 	PUSHA
 
 	CALL	MOUSE_DATA
 	
-	; Se guardan los datos del mouse en su pseudo-virus
+	; Mouse data is saved in a pseudo-virus
 	MOV		BX, OFFSET MOUSE_PSEUDOVIRUS
 	MOV		AX, WORD PTR PIXELPOS_X
 	SHR		AX, 1
@@ -351,88 +327,83 @@ ACTUALIZAR_MOUSE PROC NEAR
 	FILD	WORD PTR PIXELPOS_Y
 	FSTP	DWORD PTR VIRUS_Y[BX]
 	
-	; Verificar estado de los botones
-	; .. mouse izquierdo
+	; Verifies button status
+	; .. left clic
 	CMP		LEFT_CLICK, 01H
-	JNE		ACTUALIZAR_MOUSE_DERECHO
+	JNE		UPDATE_MOUSE_RIGHTCLICK
 	
 	PUSH	OFFSET MOUSE_PSEUDOVIRUS
 	CALL	VIRUS_COLLISION_PHAGE_MOUSE
 	ADD		SP, 2
 	
 	CMP		AH, 01
-	JNE		ACTUALIZAR_MOUSE_DERECHO
+	JNE		UPDATE_MOUSE_RIGHTCLICK
 	
-	; .. selecciona el fago para el jugador 2
+	; Selects the phage for player 2
 	MOV		AH, 0
 	PUSH	AX
 	PUSH	1
 	CALL 	PHAGE_SELECT
 	ADD		SP, 4
 	
-	ACTUALIZAR_MOUSE_DERECHO:
-	; .. verifica el clic derecho
+	UPDATE_MOUSE_RIGHTCLICK:
+	; Verifies right click
 	CMP		RIGHT_CLICK, 01H
-	JNE		ACTUALIZAR_MOUSE_FIN
+	JNE		UPDATE_MOUSE_END
 	
 	PUSH	OFFSET MOUSE_PSEUDOVIRUS
 	CALL	VIRUS_COLLISION_PHAGE_MOUSE
 	ADD		SP, 2
 	
 	CMP		AH, 01
-	JNE		ACTUALIZAR_MOUSE_FIN
+	JNE		UPDATE_MOUSE_END
 	
-	; .. env�a virus del fago seleccionado al objetivo
+	; Sends virus to the selected phage
 	MOV		AH, 0
-	MOV		DX, AX		; DX contiene el fago destino
+	MOV		DX, AX		; DX has target phage
 	
 	PUSH	1
 	CALL	PHAGE_GET_SELECTED
 	ADD		SP, 2
 	
-	; .. revisa que no sea el mismo fago el fuente/destino
+	; Check that source and destination is not the same phage
 	CMP		AX, DX
-	JE		ACTUALIZAR_MOUSE_FIN
+	JE		UPDATE_MOUSE_END
 	
-	; .. revisa que exista un fago seleccionado
+	; Checks that the selected phage exists
 	CMP		AX, 0FFH
-	JE		ACTUALIZAR_MOUSE_FIN
+	JE		UPDATE_MOUSE_END
 	
-	; .. activa los virus
+	; Activates the viruses
 	PUSH	DX
 	PUSH	AX
 	CALL	PHAGES_MOVILIZE_VIRUS
 	ADD		SP, 4
 	
-	ACTUALIZAR_MOUSE_FIN:
-	; Reestablecer registros
+	UPDATE_MOUSE_END:
+	; Restore registers
 	POPA
 	RET
-ACTUALIZAR_MOUSE ENDP
+UPDATE_MOUSE ENDP
 
-; ---------------------------------------------------- ;
-; Actualiza toda la simulaci�n de los elementos del
-; juego.
-; ---------------------------------------------------- ;
-ACTUALIZAR_LOGICA PROC NEAR
-	; Actualiza los virus
-	; Actualiza los virus
-	CALL 	VIRUS_ACTUALIZAR
+; Updates all the game simulation.
+UPDATE_LOGIC PROC NEAR
+	CALL 	UPDATE_VIRUSES
 	
-	; Actualiza los PHAGES cada segundo
-	CMP		TIEMPO_CAMBIO_SEGUNDO, 00H
-	JE		LOGICA_NO_FAGOS
-	CALL	PHAGES_UPDATE
-	LOGICA_NO_FAGOS:
+	; Updates the phages on every second
+	CMP		TIME_SECOND_CHANGE, 00H
+	JE		UPDATE_LOGIC_NOPHAGE
+	CALL	UPDATE_PHAGES
+	UPDATE_LOGIC_NOPHAGE:
 	
 	RET
-ACTUALIZAR_LOGICA ENDP
+UPDATE_LOGIC ENDP
 
 ; ---------------------------------------------------- ;
 ; Pinta la pantalla para actualizar los objetos del
 ; juego a sus nuevas posiciones.
 ; ---------------------------------------------------- ;
-ACTUALIZAR_GRAFICOS PROC NEAR
+UPDATE_GRAPHICS PROC NEAR
 	PUSHA
 
 	; Borra lo que hab�a en pantalla
@@ -513,6 +484,6 @@ ACTUALIZAR_GRAFICOS PROC NEAR
 	
 	POPA
 	RET
-ACTUALIZAR_GRAFICOS ENDP
+UPDATE_GRAPHICS ENDP
 
 
